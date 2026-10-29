@@ -31,10 +31,34 @@ public class GroupMemberRepository : BaseRepository
         }
     }
 
+    // The member with role 'owner' in a group, or null if the group has none
+    // (used by GroupMemberController to check the "exactly one owner" rule)
+    public GroupMember? GetOwnerOfGroup(int groupId)
+    {
+        NpgsqlConnection? dbConn = null;
+        try
+        {
+            dbConn = new NpgsqlConnection(ConnectionString);
+            var cmd = dbConn.CreateCommand();
+            cmd.CommandText = "select * from group_member where groupid = @groupid and role = 'owner'";
+            cmd.Parameters.Add("@groupid", NpgsqlDbType.Integer).Value = groupId;
+            using var data = GetData(dbConn, cmd);
+            if (data.Read())
+            {
+                return ReadGroupMember(data);
+            }
+            return null;
+        }
+        finally
+        {
+            dbConn?.Close();
+        }
+    }
+
     public List<GroupMember> GetGroupMembers()
     {
         NpgsqlConnection? dbConn = null;
-        var groupMembers = new List<GroupMember>();
+        var members = new List<GroupMember>();
         try
         {
             dbConn = new NpgsqlConnection(ConnectionString);
@@ -43,9 +67,9 @@ public class GroupMemberRepository : BaseRepository
             using var data = GetData(dbConn, cmd);
             while (data.Read()) // every time the loop runs it reads the next row
             {
-                groupMembers.Add(ReadGroupMember(data));
+                members.Add(ReadGroupMember(data));
             }
-            return groupMembers;
+            return members;
         }
         finally
         {
@@ -54,7 +78,7 @@ public class GroupMemberRepository : BaseRepository
     }
 
     // Adds a new group_member row and returns the id the database gave it
-    public int InsertGroupMember(GroupMember g)
+    public int InsertGroupMember(GroupMember m)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -63,14 +87,13 @@ public class GroupMemberRepository : BaseRepository
             var cmd = dbConn.CreateCommand();
             cmd.CommandText = @"
                 insert into group_member
-                (groupid, profileid, guestname, role)
+                (groupid, profileid, role)
                 values
-                (@groupid, @profileid, @guestname, @role)
+                (@groupid, @profileid, @role)
                 returning id";
-            cmd.Parameters.AddWithValue("@groupid", NpgsqlDbType.Integer, g.GroupId);
-            cmd.Parameters.AddWithValue("@profileid", NpgsqlDbType.Integer, DbValue(g.ProfileId));
-            cmd.Parameters.AddWithValue("@guestname", NpgsqlDbType.Text, DbValue(g.GuestName));
-            cmd.Parameters.AddWithValue("@role", NpgsqlDbType.Text, g.Role);
+            cmd.Parameters.AddWithValue("@groupid", NpgsqlDbType.Integer, m.GroupId);
+            cmd.Parameters.AddWithValue("@profileid", NpgsqlDbType.Integer, m.ProfileId);
+            cmd.Parameters.AddWithValue("@role", NpgsqlDbType.Text, m.Role);
             return InsertAndGetId(dbConn, cmd);
         }
         finally
@@ -79,7 +102,7 @@ public class GroupMemberRepository : BaseRepository
         }
     }
 
-    public bool UpdateGroupMember(GroupMember g)
+    public bool UpdateGroupMember(GroupMember m)
     {
         NpgsqlConnection? dbConn = null;
         try
@@ -90,14 +113,12 @@ public class GroupMemberRepository : BaseRepository
                 update group_member set
                 groupid = @groupid,
                 profileid = @profileid,
-                guestname = @guestname,
                 role = @role
                 where id = @id";
-            cmd.Parameters.AddWithValue("@groupid", NpgsqlDbType.Integer, g.GroupId);
-            cmd.Parameters.AddWithValue("@profileid", NpgsqlDbType.Integer, DbValue(g.ProfileId));
-            cmd.Parameters.AddWithValue("@guestname", NpgsqlDbType.Text, DbValue(g.GuestName));
-            cmd.Parameters.AddWithValue("@role", NpgsqlDbType.Text, g.Role);
-            cmd.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, g.Id);
+            cmd.Parameters.AddWithValue("@groupid", NpgsqlDbType.Integer, m.GroupId);
+            cmd.Parameters.AddWithValue("@profileid", NpgsqlDbType.Integer, m.ProfileId);
+            cmd.Parameters.AddWithValue("@role", NpgsqlDbType.Text, m.Role);
+            cmd.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, m.Id);
             return UpdateData(dbConn, cmd);
         }
         finally
@@ -129,9 +150,9 @@ public class GroupMemberRepository : BaseRepository
         return new GroupMember(Convert.ToInt32(data["id"]))
         {
             GroupId = Convert.ToInt32(data["groupid"]),
-            ProfileId = ReadNullableInt(data, "profileid"),
-            GuestName = ReadNullableString(data, "guestname"),
-            Role = Convert.ToString(data["role"])!
+            ProfileId = Convert.ToInt32(data["profileid"]),
+            Role = Convert.ToString(data["role"])!,
+            JoinedAt = Convert.ToDateTime(data["joinedat"])
         };
     }
 }

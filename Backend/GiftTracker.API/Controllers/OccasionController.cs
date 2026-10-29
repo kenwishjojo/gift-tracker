@@ -10,9 +10,13 @@ public class OccasionController : ControllerBase
 {
     protected OccasionRepository Repository { get; }
 
-    public OccasionController(OccasionRepository repository)
+    // Needed to check the gifts of an occasion when its recipient is changed
+    protected GiftRepository GiftRepository { get; }
+
+    public OccasionController(OccasionRepository repository, GiftRepository giftRepository)
     {
         Repository = repository;
+        GiftRepository = giftRepository;
     }
 
     [HttpGet("{id}")]
@@ -55,6 +59,15 @@ public class OccasionController : ControllerBase
         if (existing == null)
         {
             return NotFound($"Occasion with id {o.Id} not found");
+        }
+        // Rule: a gift's buyer can't be the occasion's recipient.
+        // If the recipient changes, nobody who is already buying a gift may become the recipient.
+        foreach (Gift g in GiftRepository.GetGiftsByOccasionId(o.Id))
+        {
+            if (g.BuyerId == o.RecipientId)
+            {
+                return BadRequest($"Profile {o.RecipientId} is buying gift {g.Id} for this occasion, so they can't be its recipient");
+            }
         }
         bool status = Repository.UpdateOccasion(o);
         if (status)

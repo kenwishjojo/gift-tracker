@@ -9,6 +9,13 @@ public class GiftGroupRepository : BaseRepository
 {
     public GiftGroupRepository(IConfiguration configuration) : base(configuration) { }
 
+    // The owner is not a column in gift_group, so we join group_member to find the member
+    // with role 'owner'. "left join" keeps a group in the result even if no owner is found.
+    private const string SelectWithOwner = @"
+        select g.id, g.giftid, g.name, g.description, g.createdat, m.profileid as ownerid
+        from gift_group g
+        left join group_member m on m.groupid = g.id and m.role = 'owner'";
+
     public GiftGroup? GetGiftGroupById(int id)
     {
         NpgsqlConnection? dbConn = null;
@@ -16,7 +23,7 @@ public class GiftGroupRepository : BaseRepository
         {
             dbConn = new NpgsqlConnection(ConnectionString);
             var cmd = dbConn.CreateCommand();
-            cmd.CommandText = "select * from gift_group where id = @id";
+            cmd.CommandText = SelectWithOwner + " where g.id = @id";
             cmd.Parameters.Add("@id", NpgsqlDbType.Integer).Value = id;
             using var data = GetData(dbConn, cmd);
             if (data.Read())
@@ -34,18 +41,18 @@ public class GiftGroupRepository : BaseRepository
     public List<GiftGroup> GetGiftGroups()
     {
         NpgsqlConnection? dbConn = null;
-        var giftGroups = new List<GiftGroup>();
+        var groups = new List<GiftGroup>();
         try
         {
             dbConn = new NpgsqlConnection(ConnectionString);
             var cmd = dbConn.CreateCommand();
-            cmd.CommandText = "select * from gift_group order by id";
+            cmd.CommandText = SelectWithOwner + " order by g.id";
             using var data = GetData(dbConn, cmd);
             while (data.Read()) // every time the loop runs it reads the next row
             {
-                giftGroups.Add(ReadGiftGroup(data));
+                groups.Add(ReadGiftGroup(data));
             }
-            return giftGroups;
+            return groups;
         }
         finally
         {
@@ -53,23 +60,47 @@ public class GiftGroupRepository : BaseRepository
         }
     }
 
-    // Adds a new gift_group row and returns the id the database gave it
+    // Adds a new gift_group row AND its owner (a group_member row with role 'owner'),
+    // so a group never exists without an owner. Returns the id of the new group.
+    // A transaction makes the two inserts "all or nothing": if the second one fails
+    // (e.g. the owner id doesn't exist), the first one is undone too.
     public int InsertGiftGroup(GiftGroup g)
     {
         NpgsqlConnection? dbConn = null;
         try
         {
             dbConn = new NpgsqlConnection(ConnectionString);
+            dbConn.Open();
+            using var transaction = dbConn.BeginTransaction();
+
             var cmd = dbConn.CreateCommand();
+            cmd.Transaction = transaction;
             cmd.CommandText = @"
                 insert into gift_group
-                (name, invitecode)
+                (giftid, name, description)
                 values
-                (@name, @invitecode)
+                (@giftid, @name, @description)
                 returning id";
+            cmd.Parameters.AddWithValue("@giftid", NpgsqlDbType.Integer, g.GiftId);
             cmd.Parameters.AddWithValue("@name", NpgsqlDbType.Text, g.Name);
-            cmd.Parameters.AddWithValue("@invitecode", NpgsqlDbType.Text, DbValue(g.InviteCode));
-            return InsertAndGetId(dbConn, cmd);
+            cmd.Parameters.AddWithValue("@description", NpgsqlDbType.Text, DbValue(g.Description));
+            int newId = Convert.ToInt32(cmd.ExecuteScalar());
+
+            var ownerCmd = dbConn.CreateCommand();
+            ownerCmd.Transaction = transaction;
+            ownerCmd.CommandText = @"
+                insert into group_member
+                (groupid, profileid, role)
+                values
+                (@groupid, @profileid, 'owner')";
+            ownerCmd.Parameters.AddWithValue("@groupid", NpgsqlDbType.Integer, newId);
+            ownerCmd.Parameters.AddWithValue("@profileid", NpgsqlDbType.Integer, g.OwnerId!);
+            ownerCmd.ExecuteNonQuery();
+
+            // Only now are both rows saved. If an exception happened above, Commit is never
+            // reached and the transaction is rolled back when it is disposed.
+            transaction.Commit();
+            return newId;
         }
         finally
         {
@@ -77,6 +108,7 @@ public class GiftGroupRepository : BaseRepository
         }
     }
 
+    // Updates the group details. The owner is not changed here (OwnerId is ignored).
     public bool UpdateGiftGroup(GiftGroup g)
     {
         NpgsqlConnection? dbConn = null;
@@ -86,11 +118,13 @@ public class GiftGroupRepository : BaseRepository
             var cmd = dbConn.CreateCommand();
             cmd.CommandText = @"
                 update gift_group set
+                giftid = @giftid,
                 name = @name,
-                invitecode = @invitecode
+                description = @description
                 where id = @id";
+            cmd.Parameters.AddWithValue("@giftid", NpgsqlDbType.Integer, g.GiftId);
             cmd.Parameters.AddWithValue("@name", NpgsqlDbType.Text, g.Name);
-            cmd.Parameters.AddWithValue("@invitecode", NpgsqlDbType.Text, DbValue(g.InviteCode));
+            cmd.Parameters.AddWithValue("@description", NpgsqlDbType.Text, DbValue(g.Description));
             cmd.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, g.Id);
             return UpdateData(dbConn, cmd);
         }
@@ -100,6 +134,7 @@ public class GiftGroupRepository : BaseRepository
         }
     }
 
+    // Also deletes the group's members (on delete cascade in the database)
     public bool DeleteGiftGroup(int id)
     {
         NpgsqlConnection? dbConn = null;
@@ -122,8 +157,10 @@ public class GiftGroupRepository : BaseRepository
     {
         return new GiftGroup(Convert.ToInt32(data["id"]))
         {
+            GiftId = Convert.ToInt32(data["giftid"]),
             Name = Convert.ToString(data["name"])!,
-            InviteCode = ReadNullableString(data, "invitecode"),
+            Description = ReadNullableString(data, "description"),
+            OwnerId = ReadNullableInt(data, "ownerid"),
             CreatedAt = Convert.ToDateTime(data["createdat"])
         };
     }

@@ -11,19 +11,12 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, relo
 builder.Services.AddControllers();
 
 // Make the repositories available to the controllers through dependency injection
-builder.Services.AddScoped<PreferenceTypeRepository, PreferenceTypeRepository>();
 builder.Services.AddScoped<ProfileRepository, ProfileRepository>();
+builder.Services.AddScoped<ConnectionRepository, ConnectionRepository>();
+builder.Services.AddScoped<OccasionRepository, OccasionRepository>();
+builder.Services.AddScoped<GiftRepository, GiftRepository>();
 builder.Services.AddScoped<GiftGroupRepository, GiftGroupRepository>();
 builder.Services.AddScoped<GroupMemberRepository, GroupMemberRepository>();
-builder.Services.AddScoped<PreferenceItemRepository, PreferenceItemRepository>();
-builder.Services.AddScoped<ExternalLinkRepository, ExternalLinkRepository>();
-builder.Services.AddScoped<OccasionRepository, OccasionRepository>();
-builder.Services.AddScoped<WishlistRepository, WishlistRepository>();
-builder.Services.AddScoped<WishlistShareRepository, WishlistShareRepository>();
-builder.Services.AddScoped<WishItemRepository, WishItemRepository>();
-builder.Services.AddScoped<ReservationRepository, ReservationRepository>();
-builder.Services.AddScoped<GiftRepository, GiftRepository>();
-builder.Services.AddScoped<GiftContributionRepository, GiftContributionRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

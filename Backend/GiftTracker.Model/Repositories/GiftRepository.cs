@@ -53,6 +53,30 @@ public class GiftRepository : BaseRepository
         }
     }
 
+    // All gifts for one occasion (used by OccasionController to check the buyer rule)
+    public List<Gift> GetGiftsByOccasionId(int occasionId)
+    {
+        NpgsqlConnection? dbConn = null;
+        var gifts = new List<Gift>();
+        try
+        {
+            dbConn = new NpgsqlConnection(ConnectionString);
+            var cmd = dbConn.CreateCommand();
+            cmd.CommandText = "select * from gift where occasionid = @occasionid order by id";
+            cmd.Parameters.Add("@occasionid", NpgsqlDbType.Integer).Value = occasionId;
+            using var data = GetData(dbConn, cmd);
+            while (data.Read())
+            {
+                gifts.Add(ReadGift(data));
+            }
+            return gifts;
+        }
+        finally
+        {
+            dbConn?.Close();
+        }
+    }
+
     // Adds a new gift row and returns the id the database gave it
     public int InsertGift(Gift g)
     {
@@ -63,15 +87,16 @@ public class GiftRepository : BaseRepository
             var cmd = dbConn.CreateCommand();
             cmd.CommandText = @"
                 insert into gift
-                (occasionid, recipientid, wishitemid, description, purchasetype, status)
+                (occasionid, buyerid, name, description, price, link, status)
                 values
-                (@occasionid, @recipientid, @wishitemid, @description, @purchasetype, @status)
+                (@occasionid, @buyerid, @name, @description, @price, @link, @status)
                 returning id";
             cmd.Parameters.AddWithValue("@occasionid", NpgsqlDbType.Integer, g.OccasionId);
-            cmd.Parameters.AddWithValue("@recipientid", NpgsqlDbType.Integer, g.RecipientId);
-            cmd.Parameters.AddWithValue("@wishitemid", NpgsqlDbType.Integer, DbValue(g.WishItemId));
-            cmd.Parameters.AddWithValue("@description", NpgsqlDbType.Text, g.Description);
-            cmd.Parameters.AddWithValue("@purchasetype", NpgsqlDbType.Text, g.PurchaseType);
+            cmd.Parameters.AddWithValue("@buyerid", NpgsqlDbType.Integer, g.BuyerId);
+            cmd.Parameters.AddWithValue("@name", NpgsqlDbType.Text, g.Name);
+            cmd.Parameters.AddWithValue("@description", NpgsqlDbType.Text, DbValue(g.Description));
+            cmd.Parameters.AddWithValue("@price", NpgsqlDbType.Numeric, DbValue(g.Price));
+            cmd.Parameters.AddWithValue("@link", NpgsqlDbType.Text, DbValue(g.Link));
             cmd.Parameters.AddWithValue("@status", NpgsqlDbType.Text, g.Status);
             return InsertAndGetId(dbConn, cmd);
         }
@@ -91,17 +116,19 @@ public class GiftRepository : BaseRepository
             cmd.CommandText = @"
                 update gift set
                 occasionid = @occasionid,
-                recipientid = @recipientid,
-                wishitemid = @wishitemid,
+                buyerid = @buyerid,
+                name = @name,
                 description = @description,
-                purchasetype = @purchasetype,
+                price = @price,
+                link = @link,
                 status = @status
                 where id = @id";
             cmd.Parameters.AddWithValue("@occasionid", NpgsqlDbType.Integer, g.OccasionId);
-            cmd.Parameters.AddWithValue("@recipientid", NpgsqlDbType.Integer, g.RecipientId);
-            cmd.Parameters.AddWithValue("@wishitemid", NpgsqlDbType.Integer, DbValue(g.WishItemId));
-            cmd.Parameters.AddWithValue("@description", NpgsqlDbType.Text, g.Description);
-            cmd.Parameters.AddWithValue("@purchasetype", NpgsqlDbType.Text, g.PurchaseType);
+            cmd.Parameters.AddWithValue("@buyerid", NpgsqlDbType.Integer, g.BuyerId);
+            cmd.Parameters.AddWithValue("@name", NpgsqlDbType.Text, g.Name);
+            cmd.Parameters.AddWithValue("@description", NpgsqlDbType.Text, DbValue(g.Description));
+            cmd.Parameters.AddWithValue("@price", NpgsqlDbType.Numeric, DbValue(g.Price));
+            cmd.Parameters.AddWithValue("@link", NpgsqlDbType.Text, DbValue(g.Link));
             cmd.Parameters.AddWithValue("@status", NpgsqlDbType.Text, g.Status);
             cmd.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, g.Id);
             return UpdateData(dbConn, cmd);
@@ -112,6 +139,7 @@ public class GiftRepository : BaseRepository
         }
     }
 
+    // Also deletes the gift's gift_group and its members (on delete cascade in the database)
     public bool DeleteGift(int id)
     {
         NpgsqlConnection? dbConn = null;
@@ -135,10 +163,11 @@ public class GiftRepository : BaseRepository
         return new Gift(Convert.ToInt32(data["id"]))
         {
             OccasionId = Convert.ToInt32(data["occasionid"]),
-            RecipientId = Convert.ToInt32(data["recipientid"]),
-            WishItemId = ReadNullableInt(data, "wishitemid"),
-            Description = Convert.ToString(data["description"])!,
-            PurchaseType = Convert.ToString(data["purchasetype"])!,
+            BuyerId = Convert.ToInt32(data["buyerid"]),
+            Name = Convert.ToString(data["name"])!,
+            Description = ReadNullableString(data, "description"),
+            Price = ReadNullableDecimal(data, "price"),
+            Link = ReadNullableString(data, "link"),
             Status = Convert.ToString(data["status"])!
         };
     }

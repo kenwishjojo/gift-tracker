@@ -63,15 +63,16 @@ public class OccasionRepository : BaseRepository
             var cmd = dbConn.CreateCommand();
             cmd.CommandText = @"
                 insert into occasion
-                (groupid, honoreeid, name, eventdate, budget)
+                (createdbyid, recipientid, name, eventdate, type, notes)
                 values
-                (@groupid, @honoreeid, @name, @eventdate, @budget)
+                (@createdbyid, @recipientid, @name, @eventdate, @type, @notes)
                 returning id";
-            cmd.Parameters.AddWithValue("@groupid", NpgsqlDbType.Integer, o.GroupId);
-            cmd.Parameters.AddWithValue("@honoreeid", NpgsqlDbType.Integer, DbValue(o.HonoreeId));
+            cmd.Parameters.AddWithValue("@createdbyid", NpgsqlDbType.Integer, o.CreatedById);
+            cmd.Parameters.AddWithValue("@recipientid", NpgsqlDbType.Integer, o.RecipientId);
             cmd.Parameters.AddWithValue("@name", NpgsqlDbType.Text, o.Name);
             cmd.Parameters.AddWithValue("@eventdate", NpgsqlDbType.Date, o.EventDate);
-            cmd.Parameters.AddWithValue("@budget", NpgsqlDbType.Numeric, o.Budget);
+            cmd.Parameters.AddWithValue("@type", NpgsqlDbType.Text, o.Type);
+            cmd.Parameters.AddWithValue("@notes", NpgsqlDbType.Text, DbValue(o.Notes));
             return InsertAndGetId(dbConn, cmd);
         }
         finally
@@ -89,17 +90,19 @@ public class OccasionRepository : BaseRepository
             var cmd = dbConn.CreateCommand();
             cmd.CommandText = @"
                 update occasion set
-                groupid = @groupid,
-                honoreeid = @honoreeid,
+                createdbyid = @createdbyid,
+                recipientid = @recipientid,
                 name = @name,
                 eventdate = @eventdate,
-                budget = @budget
+                type = @type,
+                notes = @notes
                 where id = @id";
-            cmd.Parameters.AddWithValue("@groupid", NpgsqlDbType.Integer, o.GroupId);
-            cmd.Parameters.AddWithValue("@honoreeid", NpgsqlDbType.Integer, DbValue(o.HonoreeId));
+            cmd.Parameters.AddWithValue("@createdbyid", NpgsqlDbType.Integer, o.CreatedById);
+            cmd.Parameters.AddWithValue("@recipientid", NpgsqlDbType.Integer, o.RecipientId);
             cmd.Parameters.AddWithValue("@name", NpgsqlDbType.Text, o.Name);
             cmd.Parameters.AddWithValue("@eventdate", NpgsqlDbType.Date, o.EventDate);
-            cmd.Parameters.AddWithValue("@budget", NpgsqlDbType.Numeric, o.Budget);
+            cmd.Parameters.AddWithValue("@type", NpgsqlDbType.Text, o.Type);
+            cmd.Parameters.AddWithValue("@notes", NpgsqlDbType.Text, DbValue(o.Notes));
             cmd.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, o.Id);
             return UpdateData(dbConn, cmd);
         }
@@ -109,6 +112,7 @@ public class OccasionRepository : BaseRepository
         }
     }
 
+    // Also deletes the occasion's gifts (on delete cascade in the database)
     public bool DeleteOccasion(int id)
     {
         NpgsqlConnection? dbConn = null;
@@ -126,16 +130,17 @@ public class OccasionRepository : BaseRepository
         }
     }
 
-    // Turns one row from the database into a Occasion object
+    // Turns one row from the database into an Occasion object
     private static Occasion ReadOccasion(NpgsqlDataReader data)
     {
         return new Occasion(Convert.ToInt32(data["id"]))
         {
-            GroupId = Convert.ToInt32(data["groupid"]),
-            HonoreeId = ReadNullableInt(data, "honoreeid"),
+            CreatedById = Convert.ToInt32(data["createdbyid"]),
+            RecipientId = Convert.ToInt32(data["recipientid"]),
             Name = Convert.ToString(data["name"])!,
             EventDate = ReadDate(data, "eventdate"),
-            Budget = Convert.ToDecimal(data["budget"])
+            Type = Convert.ToString(data["type"])!,
+            Notes = ReadNullableString(data, "notes")
         };
     }
 }

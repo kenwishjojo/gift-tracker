@@ -55,6 +55,9 @@ public class BaseRepository
     protected static int? ReadNullableInt(NpgsqlDataReader data, string column) =>
         data[column] == DBNull.Value ? null : Convert.ToInt32(data[column]);
 
+    protected static decimal? ReadNullableDecimal(NpgsqlDataReader data, string column) =>
+        data[column] == DBNull.Value ? null : Convert.ToDecimal(data[column]);
+
     protected static DateOnly ReadDate(NpgsqlDataReader data, string column) =>
         DateOnly.FromDateTime(Convert.ToDateTime(data[column]));
 

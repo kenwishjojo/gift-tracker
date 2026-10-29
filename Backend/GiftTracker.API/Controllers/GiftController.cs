@@ -10,9 +10,13 @@ public class GiftController : ControllerBase
 {
     protected GiftRepository Repository { get; }
 
-    public GiftController(GiftRepository repository)
+    // Needed to find the gift's recipient (it is stored on the occasion, not on the gift)
+    protected OccasionRepository OccasionRepository { get; }
+
+    public GiftController(GiftRepository repository, OccasionRepository occasionRepository)
     {
         Repository = repository;
+        OccasionRepository = occasionRepository;
     }
 
     [HttpGet("{id}")]
@@ -40,6 +44,11 @@ public class GiftController : ControllerBase
         {
             return BadRequest("Gift info not correct");
         }
+        string? error = CheckBuyerIsNotRecipient(g);
+        if (error != null)
+        {
+            return BadRequest(error);
+        }
         int newId = Repository.InsertGift(g);
         return Ok(Repository.GetGiftById(newId));
     }
@@ -55,6 +64,11 @@ public class GiftController : ControllerBase
         if (existing == null)
         {
             return NotFound($"Gift with id {g.Id} not found");
+        }
+        string? error = CheckBuyerIsNotRecipient(g);
+        if (error != null)
+        {
+            return BadRequest(error);
         }
         bool status = Repository.UpdateGift(g);
         if (status)
@@ -78,5 +92,21 @@ public class GiftController : ControllerBase
             return NoContent();
         }
         return BadRequest($"Unable to delete gift with id {id}");
+    }
+
+    // Rule: the buyer of a gift can't be the gift's recipient (the occasion's recipient).
+    // Returns an error message, or null if the gift is fine.
+    private string? CheckBuyerIsNotRecipient(Gift g)
+    {
+        Occasion? occasion = OccasionRepository.GetOccasionById(g.OccasionId);
+        if (occasion == null)
+        {
+            return $"Occasion with id {g.OccasionId} not found";
+        }
+        if (g.BuyerId == occasion.RecipientId)
+        {
+            return "The buyer can't be the recipient of the occasion";
+        }
+        return null;
     }
 }

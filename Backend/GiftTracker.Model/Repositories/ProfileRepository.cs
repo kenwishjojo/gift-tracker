@@ -9,6 +9,7 @@ public class ProfileRepository : BaseRepository
 {
     public ProfileRepository(IConfiguration configuration) : base(configuration) { }
 
+    // passwordhash is never selected, so it can't be sent back by the API by mistake
     public Profile? GetProfileById(int id)
     {
         NpgsqlConnection? dbConn = null;
@@ -16,7 +17,7 @@ public class ProfileRepository : BaseRepository
         {
             dbConn = new NpgsqlConnection(ConnectionString);
             var cmd = dbConn.CreateCommand();
-            cmd.CommandText = "select id, fullname, email, dateofbirth, phone, street, postalcode, city, giftnotes, createdat from profile where id = @id";
+            cmd.CommandText = "select id, fullname, email, dateofbirth, profilepictureurl, createdat from profile where id = @id";
             cmd.Parameters.Add("@id", NpgsqlDbType.Integer).Value = id;
             using var data = GetData(dbConn, cmd);
             if (data.Read())
@@ -39,7 +40,7 @@ public class ProfileRepository : BaseRepository
         {
             dbConn = new NpgsqlConnection(ConnectionString);
             var cmd = dbConn.CreateCommand();
-            cmd.CommandText = "select id, fullname, email, dateofbirth, phone, street, postalcode, city, giftnotes, createdat from profile order by id";
+            cmd.CommandText = "select id, fullname, email, dateofbirth, profilepictureurl, createdat from profile order by id";
             using var data = GetData(dbConn, cmd);
             while (data.Read()) // every time the loop runs it reads the next row
             {
@@ -63,18 +64,14 @@ public class ProfileRepository : BaseRepository
             var cmd = dbConn.CreateCommand();
             cmd.CommandText = @"
                 insert into profile
-                (fullname, email, passwordhash, dateofbirth, phone, street, postalcode, city, giftnotes)
+                (fullname, email, passwordhash, dateofbirth, profilepictureurl)
                 values
-                (@fullname, @email, @passwordhash, @dateofbirth, @phone, @street, @postalcode, @city, @giftnotes)
+                (@fullname, @email, @passwordhash, @dateofbirth, @profilepictureurl)
                 returning id";
             cmd.Parameters.AddWithValue("@fullname", NpgsqlDbType.Text, p.FullName);
             cmd.Parameters.AddWithValue("@email", NpgsqlDbType.Text, p.Email);
-            cmd.Parameters.AddWithValue("@dateofbirth", NpgsqlDbType.Date, DbValue(p.DateOfBirth));
-            cmd.Parameters.AddWithValue("@phone", NpgsqlDbType.Text, DbValue(p.Phone));
-            cmd.Parameters.AddWithValue("@street", NpgsqlDbType.Text, DbValue(p.Street));
-            cmd.Parameters.AddWithValue("@postalcode", NpgsqlDbType.Text, DbValue(p.PostalCode));
-            cmd.Parameters.AddWithValue("@city", NpgsqlDbType.Text, DbValue(p.City));
-            cmd.Parameters.AddWithValue("@giftnotes", NpgsqlDbType.Text, DbValue(p.GiftNotes));
+            cmd.Parameters.AddWithValue("@dateofbirth", NpgsqlDbType.Date, p.DateOfBirth);
+            cmd.Parameters.AddWithValue("@profilepictureurl", NpgsqlDbType.Text, DbValue(p.ProfilePictureUrl));
             // Never store the plain password – only a BCrypt hash of it
             cmd.Parameters.AddWithValue("@passwordhash", NpgsqlDbType.Text, BCrypt.Net.BCrypt.HashPassword(p.Password!));
             return InsertAndGetId(dbConn, cmd);
@@ -98,20 +95,12 @@ public class ProfileRepository : BaseRepository
                 fullname = @fullname,
                 email = @email,
                 dateofbirth = @dateofbirth,
-                phone = @phone,
-                street = @street,
-                postalcode = @postalcode,
-                city = @city,
-                giftnotes = @giftnotes
+                profilepictureurl = @profilepictureurl
                 where id = @id";
             cmd.Parameters.AddWithValue("@fullname", NpgsqlDbType.Text, p.FullName);
             cmd.Parameters.AddWithValue("@email", NpgsqlDbType.Text, p.Email);
-            cmd.Parameters.AddWithValue("@dateofbirth", NpgsqlDbType.Date, DbValue(p.DateOfBirth));
-            cmd.Parameters.AddWithValue("@phone", NpgsqlDbType.Text, DbValue(p.Phone));
-            cmd.Parameters.AddWithValue("@street", NpgsqlDbType.Text, DbValue(p.Street));
-            cmd.Parameters.AddWithValue("@postalcode", NpgsqlDbType.Text, DbValue(p.PostalCode));
-            cmd.Parameters.AddWithValue("@city", NpgsqlDbType.Text, DbValue(p.City));
-            cmd.Parameters.AddWithValue("@giftnotes", NpgsqlDbType.Text, DbValue(p.GiftNotes));
+            cmd.Parameters.AddWithValue("@dateofbirth", NpgsqlDbType.Date, p.DateOfBirth);
+            cmd.Parameters.AddWithValue("@profilepictureurl", NpgsqlDbType.Text, DbValue(p.ProfilePictureUrl));
             cmd.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, p.Id);
             return UpdateData(dbConn, cmd);
         }
@@ -145,12 +134,8 @@ public class ProfileRepository : BaseRepository
         {
             FullName = Convert.ToString(data["fullname"])!,
             Email = Convert.ToString(data["email"])!,
-            DateOfBirth = ReadNullableDate(data, "dateofbirth"),
-            Phone = ReadNullableString(data, "phone"),
-            Street = ReadNullableString(data, "street"),
-            PostalCode = ReadNullableString(data, "postalcode"),
-            City = ReadNullableString(data, "city"),
-            GiftNotes = ReadNullableString(data, "giftnotes"),
+            DateOfBirth = ReadDate(data, "dateofbirth"),
+            ProfilePictureUrl = ReadNullableString(data, "profilepictureurl"),
             CreatedAt = Convert.ToDateTime(data["createdat"])
         };
     }

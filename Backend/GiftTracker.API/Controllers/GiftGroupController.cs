@@ -21,7 +21,7 @@ public class GiftGroupController : ControllerBase
         GiftGroup? g = Repository.GetGiftGroupById(id);
         if (g == null)
         {
-            return NotFound($"Group with id {id} not found");
+            return NotFound($"Gift group with id {id} not found");
         }
         return Ok(g);
     }
@@ -32,18 +32,18 @@ public class GiftGroupController : ControllerBase
         return Ok(Repository.GetGiftGroups());
     }
 
-    // Returns the new group including the id the database gave it
+    // Creates the group and makes OwnerId its owner. Returns the new group including its id.
     [HttpPost]
     public ActionResult<GiftGroup> Post([FromBody] GiftGroup g)
     {
         if (g == null)
         {
-            return BadRequest("Group info not correct");
+            return BadRequest("Gift group info not correct");
         }
-        // Make up an invite code if none was given, e.g. "GRP-4F7A2C"
-        if (string.IsNullOrWhiteSpace(g.InviteCode))
+        // Rule: a gift group has exactly one owner – so we need to know who it is
+        if (g.OwnerId == null)
         {
-            g.InviteCode = "GRP-" + Guid.NewGuid().ToString("N")[..6].ToUpper();
+            return BadRequest("ownerId is required: every gift group needs an owner");
         }
         int newId = Repository.InsertGiftGroup(g);
         return Ok(Repository.GetGiftGroupById(newId));
@@ -54,12 +54,12 @@ public class GiftGroupController : ControllerBase
     {
         if (g == null)
         {
-            return BadRequest("Group info not correct");
+            return BadRequest("Gift group info not correct");
         }
         GiftGroup? existing = Repository.GetGiftGroupById(g.Id);
         if (existing == null)
         {
-            return NotFound($"Group with id {g.Id} not found");
+            return NotFound($"Gift group with id {g.Id} not found");
         }
         bool status = Repository.UpdateGiftGroup(g);
         if (status)
@@ -75,13 +75,13 @@ public class GiftGroupController : ControllerBase
         GiftGroup? existing = Repository.GetGiftGroupById(id);
         if (existing == null)
         {
-            return NotFound($"Group with id {id} not found");
+            return NotFound($"Gift group with id {id} not found");
         }
         bool status = Repository.DeleteGiftGroup(id);
         if (status)
         {
             return NoContent();
         }
-        return BadRequest($"Unable to delete group with id {id}");
+        return BadRequest($"Unable to delete gift group with id {id}");
     }
 }

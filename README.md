@@ -12,6 +12,10 @@ Help friends and family find the perfect gift: wishlists, groups, occasions and 
 
 The frontend will call the API, and only the API talks to the database.
 
+> **Design change:** the group switched to the 6-table design in `docs/er-design-without-preferences.svg`.
+> `Database/` and `Backend/` still implement the old 13-table design and will be rebuilt –
+> see `CLAUDE.md` for the new tables and the plan.
+
 ## Getting started
 
 ### Database

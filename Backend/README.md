@@ -50,6 +50,11 @@ Every table has the same five endpoints, e.g. for gifts:
 
 Tables: `Profile`, `Connection`, `Occasion`, `Gift`, `GiftGroup`, `GroupMember`.
 
+**Log-in:** `POST /api/Profile/login` with `{ "email": "...", "password": "..." }` returns the profile
+(without the hash) if the password matches, or **401 Unauthorized** "Wrong email or password" – the same
+answer for an unknown email, so nobody can find out which emails exist. The API itself isn't protected by
+the login (no tokens): the frontend uses it to know who the user is.
+
 ## Rules checked by the API
 
 Two rules can't be written as simple database checks, so the controllers check them and answer

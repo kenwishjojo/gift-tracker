@@ -109,7 +109,8 @@ The group decided to build the app on the **"without preferences" design** inste
    PUT (id in body), DELETE `{id}`. Add the two API rules above. Update `Backend/README.md`.
    Test every endpoint in Swagger with `dotnet run --project GiftTracker.API`.
 3. **Frontend** – create the Angular app in `Frontend/` (Angular CLI, Angular Material). Suggested
-   first slice that meets all requirements: occasion list → occasion detail with its gifts → add/edit
+   first slice that meets all requirements: a **login page** first (`POST /api/Profile/login`) that
+   leads to a **home** landing page (group decision) → occasion list → occasion detail with its gifts → add/edit
    gift form (two-way binding + validation: name required, price ≥ 0, status from the list) → profile
    page. One service per table that the pages use. Base the screens on our Figma wireframes
    (file "Wireframe Review – gift Tracker").

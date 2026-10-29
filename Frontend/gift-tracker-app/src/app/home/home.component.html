@@ -1,0 +1,8 @@
+<!-- Placeholder layout – the real design comes from the brand book -->
+@if (profile) {
+  <h1>Hi {{ profile.fullName }}</h1>
+  <ul>
+    <li><a routerLink="/occasions">See occasions</a></li>
+    <li><a [routerLink]="['/profile', profile.id]">My profile</a></li>
+  </ul>
+}

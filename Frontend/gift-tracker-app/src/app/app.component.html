@@ -1,9 +1,13 @@
 <!-- Placeholder menu – the real design comes from the brand book.
-     There is no login yet, so "My profile" shows profile 1 (Anna Jensen). -->
-<nav>
-  <a routerLink="/occasions">Occasions</a> |
-  <a routerLink="/profile/1">My profile</a>
-</nav>
+     The menu is only shown when someone is logged in. -->
+@if (authService.isLoggedIn()) {
+  <nav>
+    <a routerLink="/home">Home</a> |
+    <a routerLink="/occasions">Occasions</a> |
+    <a [routerLink]="['/profile', authService.getProfile()?.id]">My profile</a> |
+    <a href="" (click)="logout($event)">Log out</a>
+  </nav>
+}
 
 <main>
   <router-outlet />

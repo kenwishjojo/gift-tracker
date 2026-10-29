@@ -1,0 +1,27 @@
+<!-- Placeholder layout – the real design comes from the brand book -->
+<h1>Log in</h1>
+
+<!-- #loginForm="ngForm" lets us check if the whole form is valid -->
+<form #loginForm="ngForm" (ngSubmit)="onSubmit()">
+  <p>
+    <label for="email">Email</label><br />
+    <input id="email" name="email" type="email" [(ngModel)]="email" #emailField="ngModel" required email />
+    @if (emailField.invalid && emailField.touched) {
+      <br /><small class="error">Please enter a valid email</small>
+    }
+  </p>
+
+  <p>
+    <label for="password">Password</label><br />
+    <input id="password" name="password" type="password" [(ngModel)]="password" #passwordField="ngModel" required />
+    @if (passwordField.invalid && passwordField.touched) {
+      <br /><small class="error">Please enter your password</small>
+    }
+  </p>
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  <button type="submit" [disabled]="loginForm.invalid">Log in</button>
+</form>

@@ -1,0 +1,8 @@
+<!-- Placeholder layout – the real design comes from the brand book -->
+@if (profile) {
+  <h1>{{ profile.fullName }}</h1>
+  <p>{{ profile.email }}</p>
+  <p>Born {{ profile.dateOfBirth }}</p>
+} @else {
+  <p>Loading…</p>
+}

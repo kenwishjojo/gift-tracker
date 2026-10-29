@@ -1,0 +1,28 @@
+<!-- Placeholder layout – the real design comes from the brand book -->
+<a routerLink="/occasions">← All occasions</a>
+
+@if (occasion) {
+  <h1>{{ occasion.name }}</h1>
+  <p>{{ occasion.eventDate }} ({{ occasion.type }})</p>
+  @if (occasion.notes) {
+    <p>{{ occasion.notes }}</p>
+  }
+
+  <h2>Gifts</h2>
+  <ul>
+    @for (gift of gifts; track gift.id) {
+      <li>
+        {{ gift.name }} – {{ gift.status }}
+        @if (gift.price !== null) {
+          – {{ gift.price }} kr.
+        }
+        <a [routerLink]="['/gift', gift.id, 'edit']">Edit</a>
+      </li>
+    } @empty {
+      <li>No gifts yet.</li>
+    }
+  </ul>
+  <a [routerLink]="['/occasion', occasion.id, 'gift', 'new']">Add gift</a>
+} @else {
+  <p>Loading…</p>
+}

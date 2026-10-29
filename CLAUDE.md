@@ -30,11 +30,10 @@ Read this whole file before changing anything.
 
 ## Current state of the repository
 
-- `Database/GiftTrackerDb.sql` and `Backend/` implement the **old 13-table design ("Option C")**:
-  profile, preference_type, preference_item, external_link, gift_group, group_member, occasion,
-  wishlist, wishlist_share, wish_item, reservation, gift, gift_contribution. Full CRUD for all of
-  them works and was tested against the database.
-- `Frontend/` is still empty.
+- **Step 1 done** (PR #4): `Database/GiftTrackerDb.sql` implements the 6-table design below.
+- **Step 2 done** (PR #5): `Backend/` has CRUD for all 6 tables plus the two API rules, tested in Swagger.
+  The old 13-table "Option C" files are only in git history.
+- **Step 3 in progress** on branch `frontend-occasions`: `Frontend/` has no merged code yet.
 
 ## Decision: switch to the new 6-table design
 

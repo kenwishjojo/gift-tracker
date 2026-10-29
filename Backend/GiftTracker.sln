@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GiftTracker.API", "GiftTracker.API\GiftTracker.API.csproj", "{7E40E8E4-81E2-4DBF-A5D9-3FB150ED0B55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GiftTracker.Model", "GiftTracker.Model\GiftTracker.Model.csproj", "{711B9048-0E5D-4F1B-8000-7A46C0ADD497}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7E40E8E4-81E2-4DBF-A5D9-3FB150ED0B55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E40E8E4-81E2-4DBF-A5D9-3FB150ED0B55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E40E8E4-81E2-4DBF-A5D9-3FB150ED0B55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E40E8E4-81E2-4DBF-A5D9-3FB150ED0B55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{711B9048-0E5D-4F1B-8000-7A46C0ADD497}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{711B9048-0E5D-4F1B-8000-7A46C0ADD497}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{711B9048-0E5D-4F1B-8000-7A46C0ADD497}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{711B9048-0E5D-4F1B-8000-7A46C0ADD497}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -14,7 +14,7 @@
   <h2>Occasions for {{ profile.fullName.split(' ')[0] }}</h2>
   <div class="os-stack">
     @for (occasion of occasions; track occasion.id) {
-      <app-occasion-card [occasion]="occasion" [recipient]="profile" [gifts]="giftsFor(occasion.id)" />
+      <app-occasion-card [occasion]="occasion" [recipient]="profile" [gifts]="giftsFor(occasion)" [meId]="meId" />
     } @empty {
       <p>No occasions for {{ profile.fullName.split(' ')[0] }} yet.</p>
     }

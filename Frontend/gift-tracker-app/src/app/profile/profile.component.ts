@@ -6,6 +6,7 @@ import { Gift } from '../model/gift';
 import { ProfileService } from '../services/profile.service';
 import { OccasionService } from '../services/occasion.service';
 import { GiftService } from '../services/gift.service';
+import { AuthService } from '../services/auth.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { OccasionCardComponent } from '../occasion-card/occasion-card.component';
 
@@ -23,15 +24,18 @@ export class ProfileComponent implements OnInit {
   profile?: Profile;
   occasions: Occasion[] = [];
   gifts: Gift[] = [];
+  meId = 0; // the logged-in user, passed to each card
 
   constructor(
     private profileService: ProfileService,
     private occasionService: OccasionService,
     private giftService: GiftService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
     const profileId = Number(this.id);
+    this.meId = this.authService.getProfile()?.id ?? 0;
     this.profileService.getProfile(profileId).subscribe((data) => (this.profile = data));
     this.occasionService
       .getOccasionsForRecipient(profileId)
@@ -39,7 +43,11 @@ export class ProfileComponent implements OnInit {
     this.giftService.getGifts().subscribe((data) => (this.gifts = data));
   }
 
-  giftsFor(occasionId: number): Gift[] {
-    return this.gifts.filter((g) => g.occasionId === occasionId);
+  // On your own profile every occasion is yours, so no gifts are passed to the cards (they are a surprise)
+  giftsFor(occasion: Occasion): Gift[] {
+    if (occasion.recipientId === this.meId) {
+      return [];
+    }
+    return this.gifts.filter((g) => g.occasionId === occasion.id);
   }
 }

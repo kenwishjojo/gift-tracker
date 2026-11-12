@@ -62,6 +62,14 @@ Frontend/gift-tracker-app/src/
   (step 4 of the plan), so the services get everything and filter it.
 - **Who buys a new gift**: the logged-in user. The API doesn't allow the occasion's recipient to be
   the buyer, so on your own occasion the form shows a message instead.
+- **Gifts are a surprise**: on your own occasions you don't see the gifts, their prices or whether
+  one is bought – not on the occasion page, the occasion cards, your profile or `/gift/{id}/edit`.
+  This is a rule in the frontend only: the API has no tokens, so it doesn't know who is asking and
+  `GET /api/Gift` still returns every gift (e.g. in Swagger). Hiding it in the API would need real
+  authentication (future work).
+- **Splitting a gift**: tick "Split the price with others" and enter how many people (at least 2).
+  Your share is price ÷ people, calculated in `model/gift.ts` and never stored. "Your share" on an
+  occasion adds up your share of the gifts you are the buyer of.
 - **API errors**: if the backend says no (400), the form shows its message.
 - **Why Angular 21 and not 22**: in Angular 22 a page doesn't update by itself when you set a
   field inside `subscribe(...)` (OnPush is the default there). Angular 21 with `zone.js` works the

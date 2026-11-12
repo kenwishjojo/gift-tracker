@@ -4,9 +4,9 @@
   <h1>{{ gift.id === 0 ? 'Add gift idea' : 'Edit gift' }}</h1>
   <p>{{ occasion.name }}, for {{ recipient?.fullName }}</p>
 
-  @if (buyerIsRecipient()) {
-    <!-- The API would say no anyway, so we tell the user before they fill in the form -->
-    <p class="os-info">This occasion is for you, so you can't add gifts to it. Surprises are for others to plan.</p>
+  @if (isForMe()) {
+    <!-- Your own occasion: no form and no gift details, so the surprise isn't spoiled -->
+    <p class="os-info">This occasion is for you, so the gifts are a surprise. Your friends and family plan them here.</p>
   } @else {
     <!-- #giftForm="ngForm" is a template reference variable for the whole form, so we can check
          giftForm.invalid. Each field gets its own, e.g. #nameField="ngModel" (Lecture 7). -->

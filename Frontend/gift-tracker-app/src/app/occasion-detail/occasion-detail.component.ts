@@ -38,8 +38,14 @@ export class OccasionDetailComponent implements OnInit {
   // Runs when the page opens: fetch the data from the API through the services (Lecture 6)
   ngOnInit(): void {
     const occasionId = Number(this.id);
-    this.occasionService.getOccasion(occasionId).subscribe((data) => (this.occasion = data));
-    this.giftService.getGiftsForOccasion(occasionId).subscribe((data) => (this.gifts = data));
+    this.occasionService.getOccasion(occasionId).subscribe((data) => {
+      this.occasion = data;
+      // Only load the gifts when the occasion isn't for the logged-in user – the gifts are a surprise.
+      // (This is a rule in the frontend only: the API itself doesn't know who is asking, see README.)
+      if (!this.isForMe()) {
+        this.giftService.getGiftsForOccasion(occasionId).subscribe((gifts) => (this.gifts = gifts));
+      }
+    });
     this.profileService.getProfiles().subscribe((data) => (this.profiles = data));
   }
 
@@ -60,6 +66,12 @@ export class OccasionDetailComponent implements OnInit {
   myShare(): number {
     const me = this.authService.getProfile();
     return me ? totalShareFor(this.gifts, me.id) : 0;
+  }
+
+  // True when the logged-in user is the one getting the gifts
+  isForMe(): boolean {
+    const me = this.authService.getProfile();
+    return !!me && !!this.occasion && this.occasion.recipientId === me.id;
   }
 
   isBoughtOrGiven(gift: Gift): boolean {

@@ -50,6 +50,11 @@ export class OccasionCardComponent {
     return 'has passed';
   }
 
+  // True when the logged-in user is the one getting the gifts. Then the card hides all gift info.
+  isForMe(): boolean {
+    return this.meId > 0 && this.occasion.recipientId === this.meId;
+  }
+
   // A gift counts as done when it is bought or already given
   hasBoughtGift(): boolean {
     return this.gifts.some((g) => g.status === 'bought' || g.status === 'given');
@@ -58,6 +63,6 @@ export class OccasionCardComponent {
   // Brand book: blue border and blue badge only when the occasion is close (30 days) and has no gift
   isSoonWithoutGift(): boolean {
     const days = this.daysLeft();
-    return days >= 0 && days <= 30 && this.gifts.length === 0;
+    return !this.isForMe() && days >= 0 && days <= 30 && this.gifts.length === 0;
   }
 }

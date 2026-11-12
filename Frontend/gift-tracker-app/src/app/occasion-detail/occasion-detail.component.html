@@ -16,6 +16,10 @@
     <p class="os-info">{{ occasion.notes }}</p>
   }
 
+  @if (isForMe()) {
+    <!-- Your own occasion: the gifts are a surprise, so we don't show them, their prices or the Add button -->
+    <p class="os-info">This occasion is for you, so the gifts are a surprise. Your friends and family plan them here.</p>
+  } @else {
   <!-- Summary for the whole occasion. "Your share" adds up your part of the gifts you are the buyer of. -->
   @if (gifts.length > 0) {
     <div class="os-info os-stack totals">
@@ -78,6 +82,7 @@
       <p>No gifts yet. Do you have an idea?</p>
     }
   </div>
+  }
 } @else {
   <p>Loading…</p>
 }

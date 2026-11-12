@@ -46,8 +46,12 @@ export class OccasionListComponent implements OnInit {
     return this.profiles.find((p) => p.id === id);
   }
 
-  giftsFor(occasionId: number): Gift[] {
-    return this.gifts.filter((g) => g.occasionId === occasionId);
+  // The gifts for one occasion – none for the logged-in user's own occasions (they are a surprise)
+  giftsFor(occasion: Occasion): Gift[] {
+    if (occasion.recipientId === this.meId) {
+      return [];
+    }
+    return this.gifts.filter((g) => g.occasionId === occasion.id);
   }
 
   // Today's date as "YYYY-MM-DD" (same format as eventDate)

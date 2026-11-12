@@ -84,10 +84,11 @@ export class GiftFormComponent implements OnInit {
     });
   }
 
-  // Rule from the API: the buyer can't be the occasion's recipient
-  // (you can't add gifts to your own birthday)
-  buyerIsRecipient(): boolean {
-    return !!this.gift && !!this.occasion && this.gift.buyerId === this.occasion.recipientId;
+  // True when the logged-in user is the occasion's recipient. Then the form is hidden:
+  // you can't add gifts to your own birthday (the API checks that too: buyer can't be the recipient),
+  // and opening /gift/5/edit for a gift on your own occasion mustn't reveal the surprise either.
+  isForMe(): boolean {
+    return !!this.me && !!this.occasion && this.occasion.recipientId === this.me.id;
   }
 
   // When the checkbox is ticked we start at 2 people, the smallest real split

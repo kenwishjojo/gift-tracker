@@ -1,0 +1,20 @@
+<a class="os-occ" [class.os-occ--soon]="isSoonWithoutGift()" [routerLink]="['/occasion', occasion.id]">
+  <app-avatar [name]="recipient?.fullName ?? ''" />
+
+  <div class="os-occ__body">
+    <span class="os-title">{{ recipient?.fullName }}</span>
+    <span>{{ occasion.name }}, {{ occasion.eventDate | date: 'd MMM y' }} · {{ timeText() }}</span>
+
+    <!-- At most two badges, always with text (brand book p. 5) -->
+    <div class="os-row">
+      <span class="os-badge os-badge--info">{{ occasion.type | titlecase }}</span>
+      @if (hasBoughtGift()) {
+        <span class="os-badge os-badge--done"><mat-icon aria-hidden="true">check</mat-icon> Gift bought</span>
+      } @else if (gifts.length === 0) {
+        <span class="os-badge" [class.os-badge--soon]="isSoonWithoutGift()">No gift yet</span>
+      } @else {
+        <span class="os-badge">{{ gifts.length }} gift {{ gifts.length === 1 ? 'idea' : 'ideas' }}</span>
+      }
+    </div>
+  </div>
+</a>

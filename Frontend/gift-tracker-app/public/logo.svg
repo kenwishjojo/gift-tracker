@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GiftTracker">
+  <!-- Brand book p. 2: a gift tag with a black check mark in a soft blue square -->
+  <rect width="64" height="64" rx="16" fill="#4497FF"/>
+  <path d="M20 16h18l10 10v22H20z" fill="#F9F9F9" stroke="#1B1B1B" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="40" cy="23" r="2.5" fill="#1B1B1B"/>
+  <path d="M26 36l5 5 9-11" fill="none" stroke="#1B1B1B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

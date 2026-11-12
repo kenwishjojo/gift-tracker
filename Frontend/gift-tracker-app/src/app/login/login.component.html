@@ -1,27 +1,31 @@
-<!-- Placeholder layout – the real design comes from the brand book -->
-<h1>Log in</h1>
+<div class="login os-card">
+  <h1>Log in</h1>
+  <p>Keep track of the gifts for everyone you care about.</p>
 
-<!-- #loginForm="ngForm" lets us check if the whole form is valid -->
-<form #loginForm="ngForm" (ngSubmit)="onSubmit()">
-  <p>
-    <label for="email">Email</label><br />
-    <input id="email" name="email" type="email" [(ngModel)]="email" #emailField="ngModel" required email />
-    @if (emailField.invalid && emailField.touched) {
-      <br /><small class="error">Please enter a valid email</small>
+  <!-- #loginForm="ngForm" lets us check if the whole form is valid -->
+  <form #loginForm="ngForm" (ngSubmit)="onSubmit()" class="os-stack">
+    <div class="os-field" [class.os-field--error]="emailField.invalid && emailField.touched">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email"
+             [(ngModel)]="email" #emailField="ngModel" required email />
+      @if (emailField.invalid && emailField.touched) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please enter your email, e.g. anna.jensen&#64;example.com</span>
+      }
+    </div>
+
+    <div class="os-field" [class.os-field--error]="passwordField.invalid && passwordField.touched">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password"
+             [(ngModel)]="password" #passwordField="ngModel" required />
+      @if (passwordField.invalid && passwordField.touched) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please enter your password</span>
+      }
+    </div>
+
+    @if (errorMessage) {
+      <p class="os-error"><mat-icon aria-hidden="true">error</mat-icon> {{ errorMessage }}</p>
     }
-  </p>
 
-  <p>
-    <label for="password">Password</label><br />
-    <input id="password" name="password" type="password" [(ngModel)]="password" #passwordField="ngModel" required />
-    @if (passwordField.invalid && passwordField.touched) {
-      <br /><small class="error">Please enter your password</small>
-    }
-  </p>
-
-  @if (errorMessage) {
-    <p class="error">{{ errorMessage }}</p>
-  }
-
-  <button type="submit" [disabled]="loginForm.invalid">Log in</button>
-</form>
+    <button type="submit" class="os-btn os-btn--primary" [disabled]="loginForm.invalid">Log in</button>
+  </form>
+</div>

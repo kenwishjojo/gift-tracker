@@ -1,14 +1,19 @@
-<!-- Placeholder menu – the real design comes from the brand book.
-     The menu is only shown when someone is logged in. -->
-@if (authService.isLoggedIn()) {
-  <nav>
-    <a routerLink="/home">Home</a> |
-    <a routerLink="/occasions">Occasions</a> |
-    <a [routerLink]="['/profile', authService.getProfile()?.id]">My profile</a> |
-    <a href="" (click)="logout($event)">Log out</a>
-  </nav>
-}
+<!-- Top bar (Angular Material toolbar, Lecture 8). The menu is only shown when someone is logged in. -->
+<mat-toolbar class="top-bar">
+  <a class="logo" routerLink="/home">
+    <img src="logo.svg" alt="" width="32" height="32" />
+    <span>GiftTracker</span>
+  </a>
 
-<main>
+  @if (authService.isLoggedIn()) {
+    <nav class="menu">
+      <a routerLink="/occasions">Occasions</a>
+      <a [routerLink]="['/profile', authService.getProfile()?.id]">My profile</a>
+      <button type="button" class="os-btn os-btn--link" (click)="logout()">Log out</button>
+    </nav>
+  }
+</mat-toolbar>
+
+<main class="os-page">
   <router-outlet />
 </main>

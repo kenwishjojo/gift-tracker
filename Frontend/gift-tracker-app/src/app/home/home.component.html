@@ -1,8 +1,9 @@
-<!-- Placeholder layout – the real design comes from the brand book -->
 @if (profile) {
-  <h1>Hi {{ profile.fullName }}</h1>
-  <ul>
-    <li><a routerLink="/occasions">See occasions</a></li>
-    <li><a [routerLink]="['/profile', profile.id]">My profile</a></li>
-  </ul>
+  <h1 class="os-display">Hi {{ profile.fullName.split(' ')[0] }}</h1>
+  <p>Keep track of the gifts for everyone you care about: occasions, gift ideas and what is already bought.</p>
+
+  <div class="os-row">
+    <a class="os-btn os-btn--primary" routerLink="/occasions">See occasions</a>
+    <a class="os-btn" [routerLink]="['/profile', profile.id]">My profile</a>
+  </div>
 }

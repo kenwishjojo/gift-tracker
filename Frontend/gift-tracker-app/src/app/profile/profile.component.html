@@ -1,8 +1,24 @@
-<!-- Placeholder layout – the real design comes from the brand book -->
 @if (profile) {
-  <h1>{{ profile.fullName }}</h1>
-  <p>{{ profile.email }}</p>
-  <p>Born {{ profile.dateOfBirth }}</p>
+  <div class="os-card header">
+    <app-avatar [name]="profile.fullName" />
+    <div>
+      <h1>{{ profile.fullName }}</h1>
+      <p class="os-stack details">
+        <span><span class="os-label">Email</span><br />{{ profile.email }}</span>
+        <span><span class="os-label">Birthday</span><br />{{ profile.dateOfBirth | date: 'd MMMM y' }}</span>
+      </p>
+      <span class="os-meta">Member since {{ profile.createdAt | date: 'd MMM y' }}</span>
+    </div>
+  </div>
+
+  <h2>Occasions for {{ profile.fullName.split(' ')[0] }}</h2>
+  <div class="os-stack">
+    @for (occasion of occasions; track occasion.id) {
+      <app-occasion-card [occasion]="occasion" [recipient]="profile" [gifts]="giftsFor(occasion.id)" />
+    } @empty {
+      <p>No occasions for {{ profile.fullName.split(' ')[0] }} yet.</p>
+    }
+  </div>
 } @else {
   <p>Loading…</p>
 }

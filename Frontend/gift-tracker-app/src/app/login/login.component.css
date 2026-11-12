@@ -1,3 +1,5 @@
-.error {
-  color: #b00020;
+.login {
+  max-width: 400px;
+  margin: 32px auto;
+  padding: 24px;
 }

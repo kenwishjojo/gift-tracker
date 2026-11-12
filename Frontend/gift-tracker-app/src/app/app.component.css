@@ -1,0 +1,44 @@
+/* White top bar with black text (sets Angular Material's toolbar colours) */
+.top-bar {
+  --mat-toolbar-container-background-color: var(--surface);
+  --mat-toolbar-container-text-color: var(--black);
+  flex-wrap: wrap;
+  gap: 8px;
+  height: auto;
+  min-height: 64px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--beige);
+}
+
+/* Logo: icon + the word in Outfit ExtraBold, gap = a quarter of the icon's height (brand book p. 2) */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  text-decoration: none;
+}
+
+.menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  font-family: var(--font-body);
+  font-size: 16px;
+}
+
+/* Menu links are at least 44px high so they are easy to tap */
+.menu a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+}
+
+/* "Log out" is a button (it does something) but looks like the other menu links */
+.menu .os-btn--link {
+  font-weight: 400;
+}

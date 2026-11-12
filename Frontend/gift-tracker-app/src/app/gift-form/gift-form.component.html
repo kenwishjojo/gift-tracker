@@ -1,3 +1,74 @@
-<!-- Placeholder – the gift form is built together with the screen design -->
-<h1>Gift</h1>
-<p>The add/edit gift form comes here.</p>
+@if (gift && occasion) {
+  <a [routerLink]="['/occasion', occasion.id]">Back to {{ occasion.name }}</a>
+
+  <h1>{{ gift.id === 0 ? 'Add gift idea' : 'Edit gift' }}</h1>
+  <p>For {{ recipient?.fullName }} · {{ occasion.name }}</p>
+
+  @if (buyerIsRecipient()) {
+    <!-- The API would say no anyway, so we tell the user before they fill in the form -->
+    <p class="os-info">This occasion is for you, so you can't add gifts to it. Surprises are for others to plan.</p>
+  } @else {
+    <!-- #giftForm="ngForm" lets us check if the whole form is valid -->
+    <form #giftForm="ngForm" (ngSubmit)="saveGift()" class="os-card os-stack form">
+      <!-- Name: required -->
+      <div class="os-field" [class.os-field--error]="nameField.invalid && (nameField.dirty || nameField.touched)">
+        <label for="name">Gift idea</label>
+        <input id="name" name="name" type="text" [(ngModel)]="gift.name" #nameField="ngModel" required />
+        @if (nameField.invalid && (nameField.dirty || nameField.touched)) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Oops, the gift needs a name, e.g. Ceramic mug</span>
+        }
+      </div>
+
+      <div class="os-field">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" [(ngModel)]="gift.description"></textarea>
+        <span class="os-field__help">Optional, e.g. colour or size</span>
+      </div>
+
+      <!-- Price: optional, but never below 0 -->
+      <div class="os-field" [class.os-field--error]="priceField.invalid && (priceField.dirty || priceField.touched)">
+        <label for="price">Price (kr.)</label>
+        <input id="price" name="price" type="number" min="0" step="1" [(ngModel)]="gift.price" #priceField="ngModel" />
+        @if (priceField.errors?.['min']) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Oops, the price can't be below 0, e.g. 300</span>
+        } @else {
+          <span class="os-field__help">Optional – leave it empty if you don't know it yet</span>
+        }
+      </div>
+
+      <div class="os-field">
+        <label for="link">Link</label>
+        <input id="link" name="link" type="url" [(ngModel)]="gift.link" placeholder="https://" />
+        <span class="os-field__help">Optional – where the gift can be bought</span>
+      </div>
+
+      <!-- Status: required, one of the values the database allows -->
+      <div class="os-field" [class.os-field--error]="statusField.invalid && (statusField.dirty || statusField.touched)">
+        <label for="status">Status</label>
+        <select id="status" name="status" [(ngModel)]="gift.status" #statusField="ngModel" required>
+          @for (status of statuses; track status) {
+            <option [value]="status">{{ status | titlecase }}</option>
+          }
+        </select>
+        @if (statusField.invalid && (statusField.dirty || statusField.touched)) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose a status</span>
+        }
+      </div>
+
+      @if (errorMessage) {
+        <p class="os-error"><mat-icon aria-hidden="true">error</mat-icon> {{ errorMessage }}</p>
+      }
+
+      <div class="os-row">
+        <!-- The one blue (primary) button on this screen. Disabled while the form is invalid (Lecture 8). -->
+        <button type="submit" class="os-btn os-btn--primary" [disabled]="giftForm.invalid">Save gift</button>
+        <a class="os-btn" [routerLink]="['/occasion', occasion.id]">Cancel</a>
+      </div>
+      @if (giftForm.invalid) {
+        <span class="os-meta">Fix the fields marked above to save the gift.</span>
+      }
+    </form>
+  }
+} @else {
+  <p>Loading…</p>
+}

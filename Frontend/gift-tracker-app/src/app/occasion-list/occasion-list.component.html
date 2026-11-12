@@ -1,12 +1,20 @@
-<!-- Placeholder layout – the real design comes from the brand book -->
-<h1>Occasions</h1>
-<ul>
-  @for (occasion of occasions; track occasion.id) {
-    <li>
-      <a [routerLink]="['/occasion', occasion.id]">{{ occasion.name }}</a>
-      – {{ occasion.eventDate }} ({{ occasion.type }})
-    </li>
+<h1>Upcoming occasions</h1>
+
+<div class="os-stack">
+  @for (occasion of upcoming; track occasion.id) {
+    <app-occasion-card [occasion]="occasion" [recipient]="findProfile(occasion.recipientId)"
+                       [gifts]="giftsFor(occasion.id)" />
   } @empty {
-    <li>No occasions yet.</li>
+    <p>No upcoming occasions. Enjoy the calm.</p>
   }
-</ul>
+</div>
+
+@if (past.length > 0) {
+  <h2>Past occasions</h2>
+  <div class="os-stack">
+    @for (occasion of past; track occasion.id) {
+      <app-occasion-card [occasion]="occasion" [recipient]="findProfile(occasion.recipientId)"
+                         [gifts]="giftsFor(occasion.id)" />
+    }
+  </div>
+}

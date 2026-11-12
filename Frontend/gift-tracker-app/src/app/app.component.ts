@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { AuthService } from './services/auth.service';
 
 @Component({
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, MatToolbarModule],
   selector: 'app-root',
   styleUrl: './app.component.css',
   templateUrl: './app.component.html',
@@ -15,8 +16,7 @@ export class App {
     private router: Router,
   ) {}
 
-  logout(event: Event): void {
-    event.preventDefault(); // stop the link from reloading the page
+  logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
   }

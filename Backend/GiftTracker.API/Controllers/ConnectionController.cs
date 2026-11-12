@@ -32,13 +32,20 @@ public class ConnectionController : ControllerBase
         return Ok(Repository.GetConnections());
     }
 
-    // Returns the new connection including the id the database gave it
+    // Sends a friend request. Returns the new connection including the id the database gave it.
+    // The database already stops a request to yourself (chk_connection_not_self) and a second
+    // connection between the same two people in either direction (uk_connection_pair).
     [HttpPost]
     public ActionResult<Connection> Post([FromBody] Connection c)
     {
         if (c == null)
         {
             return BadRequest("Connection info not correct");
+        }
+        // Rule: a friendship always starts as a request – nobody can make someone their friend directly
+        if (c.Status != "pending")
+        {
+            return BadRequest("A new friend request must have status 'pending'");
         }
         int newId = Repository.InsertConnection(c);
         return Ok(Repository.GetConnectionById(newId));
@@ -56,6 +63,19 @@ public class ConnectionController : ControllerBase
         {
             return NotFound($"Connection with id {c.Id} not found");
         }
+        // Rule: a request stays between the same two people – only the status may change
+        if (c.RequesterId != existing.RequesterId || c.AddresseeId != existing.AddresseeId)
+        {
+            return BadRequest("The people in a friend request can't be changed");
+        }
+        // Rule: the only change allowed is accepting a pending request (pending -> accepted).
+        // To decline a request or remove a friend, DELETE the connection instead.
+        if (existing.Status == "accepted" && c.Status != "accepted")
+        {
+            return BadRequest("An accepted friendship can't go back to pending – delete it instead");
+        }
+        // Note: without login tokens the API can't check that it is the addressee who accepts.
+        // The frontend only shows the Accept button to the addressee.
         bool status = Repository.UpdateConnection(c);
         if (status)
         {

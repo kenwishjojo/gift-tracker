@@ -1,0 +1,25 @@
+.add-friend {
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+/* One person per card: avatar, name, then the buttons. Wraps on a narrow phone. */
+.person {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.name {
+  flex: 1;
+}
+
+/* Green is only for status (brand book p. 3), and always with text and an icon */
+.success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--green);
+}

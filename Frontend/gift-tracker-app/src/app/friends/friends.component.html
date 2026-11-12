@@ -1,0 +1,70 @@
+<h1>Friends</h1>
+
+<!-- Add a friend: a small template-driven form, two-way bound with [(ngModel)] (Lecture 7) -->
+<form #friendForm="ngForm" (ngSubmit)="sendRequest(friendForm)" class="os-card os-stack add-friend">
+  <div class="os-field" [class.os-field--error]="emailField.invalid && (emailField.dirty || emailField.touched)">
+    <label for="email">Add a friend by email</label>
+    <input id="email" name="email" type="email" [(ngModel)]="email" #emailField="ngModel" required email />
+    @if (emailField.invalid && (emailField.dirty || emailField.touched)) {
+      <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please enter an email, e.g. mads.hansen&#64;example.com</span>
+    }
+  </div>
+
+  @if (errorMessage) {
+    <p class="os-error"><mat-icon aria-hidden="true">error</mat-icon> {{ errorMessage }}</p>
+  }
+  @if (successMessage) {
+    <p class="success"><mat-icon aria-hidden="true">check</mat-icon> {{ successMessage }}</p>
+  }
+
+  <!-- The one blue (primary) button on this screen. Disabled while the email is invalid (Lecture 7). -->
+  <div class="os-row">
+    <button type="submit" class="os-btn os-btn--primary" [disabled]="friendForm.invalid">Send friend request</button>
+  </div>
+</form>
+
+<!-- Requests for me: only here is there an Accept button, so only the addressee can accept -->
+@if (requestsForMe().length > 0) {
+  <h2>Friend requests for you</h2>
+  <div class="os-stack">
+    @for (c of requestsForMe(); track c.id) {
+      <div class="os-card person">
+        <app-avatar [name]="otherPerson(c)?.fullName ?? ''" />
+        <span class="os-title name">{{ otherPerson(c)?.fullName }}</span>
+        <div class="os-row">
+          <button type="button" class="os-btn" (click)="accept(c)">Accept</button>
+          <button type="button" class="os-btn" (click)="remove(c, 'Decline the friend request from ' + otherPerson(c)?.fullName + '?')">Decline</button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<h2>Your friends</h2>
+<div class="os-stack">
+  @for (c of friends(); track c.id) {
+    <div class="os-card person">
+      <app-avatar [name]="otherPerson(c)?.fullName ?? ''" />
+      <a class="os-title name" [routerLink]="['/profile', otherPerson(c)?.id]">{{ otherPerson(c)?.fullName }}</a>
+      <button type="button" class="os-btn" (click)="remove(c, 'Remove ' + otherPerson(c)?.fullName + ' as a friend?')">Remove</button>
+    </div>
+  } @empty {
+    <p>No friends yet. Send a request above to get started.</p>
+  }
+</div>
+
+@if (requestsISent().length > 0) {
+  <h2>Requests you sent</h2>
+  <div class="os-stack">
+    @for (c of requestsISent(); track c.id) {
+      <div class="os-card person">
+        <app-avatar [name]="otherPerson(c)?.fullName ?? ''" />
+        <span class="name">
+          <span class="os-title">{{ otherPerson(c)?.fullName }}</span><br />
+          <span class="os-meta">Waiting for an answer</span>
+        </span>
+        <button type="button" class="os-btn" (click)="remove(c, 'Cancel your request to ' + otherPerson(c)?.fullName + '?')">Cancel</button>
+      </div>
+    }
+  </div>
+}

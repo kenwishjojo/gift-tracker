@@ -6,6 +6,7 @@ import { OccasionDetailComponent } from './occasion-detail/occasion-detail.compo
 import { GiftFormComponent } from './gift-form/gift-form.component';
 import { OccasionFormComponent } from './occasion-form/occasion-form.component';
 import { ProfileComponent } from './profile/profile.component';
+import { FriendsComponent } from './friends/friends.component';
 
 // Which component to show for which URL
 export const routes: Routes = [
@@ -21,4 +22,5 @@ export const routes: Routes = [
   { path: 'occasion/:occasionId/gift/new', component: GiftFormComponent }, // add a gift
   { path: 'gift/:id/edit', component: GiftFormComponent }, // edit a gift
   { path: 'profile/:id', component: ProfileComponent },
+  { path: 'friends', component: FriendsComponent }, // friend requests and friends
 ];

@@ -26,6 +26,8 @@ The frontend calls the API, and only the API talks to the database.
   **your share**, on the gift form, the occasion page and the occasion cards.
 - **Gifts are a surprise**: you don't see the gifts planned for your own occasions.
 - **Profile page**: a person's details and the occasions where they get gifts.
+- **Friends**: send a friend request by email, accept or decline requests you get, cancel ones you
+  sent, and remove friends.
 - Design from our brand book: colours, fonts (Outfit, Inter) and components.
 
 ### What's next

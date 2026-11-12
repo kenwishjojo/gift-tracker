@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Occasion } from '../model/occasion';
 import { Gift, shareOf, totalPrice, totalShareFor } from '../model/gift';
@@ -33,6 +33,7 @@ export class OccasionDetailComponent implements OnInit {
     private giftService: GiftService,
     private profileService: ProfileService,
     private authService: AuthService, // to know who "you" are in "Your share"
+    private router: Router, // to go back to the list after deleting the occasion
   ) {}
 
   // Runs when the page opens: fetch the data from the API through the services (Lecture 6)
@@ -76,6 +77,13 @@ export class OccasionDetailComponent implements OnInit {
 
   isBoughtOrGiven(gift: Gift): boolean {
     return gift.status === 'bought' || gift.status === 'given';
+  }
+
+  // Deleting an occasion also deletes its gifts (on delete cascade in the database), so we ask first
+  deleteOccasion(): void {
+    if (this.occasion && confirm(`Delete "${this.occasion.name}" and all its gifts?`)) {
+      this.occasionService.deleteOccasion(this.occasion.id).subscribe(() => this.router.navigate(['/occasions']));
+    }
   }
 
   deleteGift(gift: Gift): void {

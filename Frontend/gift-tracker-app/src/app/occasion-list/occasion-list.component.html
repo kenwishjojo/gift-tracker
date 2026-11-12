@@ -1,4 +1,8 @@
-<h1>Upcoming occasions</h1>
+<div class="title-row os-row">
+  <h1>Upcoming occasions</h1>
+  <!-- The one blue (primary) button on this screen -->
+  <a class="os-btn os-btn--primary" routerLink="/occasion/new">Add occasion</a>
+</div>
 
 <div class="os-stack">
   @for (occasion of upcoming; track occasion.id) {

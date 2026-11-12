@@ -8,3 +8,6 @@ export interface Occasion {
   type: string; // "birthday", "christmas", "anniversary" or "other"
   notes: string | null;
 }
+
+// The allowed values of occasion.type (same list as the check constraint in the database)
+export const OCCASION_TYPES = ['birthday', 'christmas', 'anniversary', 'other'];

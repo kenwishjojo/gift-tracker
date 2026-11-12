@@ -30,3 +30,7 @@
   flex-direction: column;
   gap: 4px;
 }
+
+.occasion-actions {
+  margin-top: 16px;
+}

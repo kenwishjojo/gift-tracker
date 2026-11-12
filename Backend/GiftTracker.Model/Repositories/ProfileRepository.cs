@@ -54,6 +54,38 @@ public class ProfileRepository : BaseRepository
         }
     }
 
+    // Log-in: returns the profile if the email exists and the password matches its hash, otherwise null.
+    // This is the only method that reads passwordhash, and the hash is never put into the Profile object.
+    public Profile? CheckLogin(string email, string password)
+    {
+        NpgsqlConnection? dbConn = null;
+        try
+        {
+            dbConn = new NpgsqlConnection(ConnectionString);
+            var cmd = dbConn.CreateCommand();
+            // lower() on both sides: emails are unique regardless of capital letters
+            cmd.CommandText = @"
+                select id, fullname, email, passwordhash, dateofbirth, profilepictureurl, createdat
+                from profile where lower(email) = lower(@email)";
+            cmd.Parameters.AddWithValue("@email", NpgsqlDbType.Text, email);
+            using var data = GetData(dbConn, cmd);
+            if (data.Read())
+            {
+                string hash = Convert.ToString(data["passwordhash"])!;
+                // BCrypt hashes the typed password the same way and compares it with the stored hash
+                if (BCrypt.Net.BCrypt.Verify(password, hash))
+                {
+                    return ReadProfile(data);
+                }
+            }
+            return null;
+        }
+        finally
+        {
+            dbConn?.Close();
+        }
+    }
+
     // Adds a new profile row and returns the id the database gave it
     public int InsertProfile(Profile p)
     {

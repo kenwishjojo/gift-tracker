@@ -48,6 +48,23 @@ public class ProfileController : ControllerBase
         return Ok(Repository.GetProfileById(newId));
     }
 
+    // Log-in: returns the profile (without the password hash) if email and password are correct.
+    // Wrong email and wrong password give the same answer, so nobody can find out which emails exist.
+    [HttpPost("login")]
+    public ActionResult<Profile> Login([FromBody] LoginRequest login)
+    {
+        if (login == null || string.IsNullOrWhiteSpace(login.Email) || string.IsNullOrWhiteSpace(login.Password))
+        {
+            return BadRequest("Email and password are required");
+        }
+        Profile? p = Repository.CheckLogin(login.Email, login.Password);
+        if (p == null)
+        {
+            return Unauthorized("Wrong email or password");
+        }
+        return Ok(p);
+    }
+
     [HttpPut]
     public ActionResult UpdateProfile([FromBody] Profile p)
     {

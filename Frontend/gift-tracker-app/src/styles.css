@@ -1,0 +1,284 @@
+/* GiftTracker design system – from the brand book (docs/GiftTracker-brandbog.pdf).
+   Components only use these variables in their CSS, never hex codes (brand book p. 6). */
+
+/* Brand book p. 6: colours, corners and fonts */
+:root {
+  --blue: #4497FF; --light-blue: #ADDEFF; --beige: #E5DBC8;
+  --white: #F9F9F9; --surface: #FFFFFF; --black: #1B1B1B;
+  --black-muted: #555555; --line-strong: #767676;
+  --radius-sm: 12px; --radius-md: 20px; --radius-lg: 32px; --radius-pill: 999px;
+  --font-display: "Outfit", sans-serif; --font-body: "Inter", sans-serif;
+}
+
+/* Brand book p. 3: green and red are only for status and errors (not part of the brand),
+   and are always shown together with text or an icon */
+:root {
+  --green: #1E7B34;
+  --red: #B3261E;
+}
+
+/* ---------- Base: 16px Inter, black text, light background ---------- */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--white);
+  color: var(--black);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Headings in Outfit, written in sentence case (brand book p. 4) */
+h1,
+h2,
+.os-display {
+  font-family: var(--font-display);
+  line-height: 1.2;
+  margin: 0 0 16px;
+}
+
+.os-display {
+  font-size: 40px;
+  font-weight: 800;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 32px;
+}
+
+p {
+  margin: 0 0 16px;
+  max-width: 70ch; /* lines of at most about 70 characters */
+}
+
+/* Links are black and underlined – blue text on white is too weak (brand book p. 3) */
+a {
+  color: var(--black);
+  text-decoration: underline;
+}
+
+/* Focus ring in black for keyboard users */
+:focus-visible {
+  outline: 2px solid var(--black);
+  outline-offset: 2px;
+}
+
+/* Text styles: title, label and metadata (brand book p. 4) */
+.os-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.os-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.os-meta {
+  font-size: 13px;
+  color: var(--black-muted);
+}
+
+/* ---------- Layout: 8-point spacing, 16px side margin on mobile ---------- */
+.os-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.os-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.os-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* A white card – the only thing with a shadow (brand book p. 4) */
+.os-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+}
+
+/* Info box in light blue, e.g. notes */
+.os-info {
+  background: var(--light-blue);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+}
+
+/* ---------- Buttons .os-btn (brand book p. 5) ----------
+   Primary = blue with black text, only one per screen. Secondary = black border.
+   All at least 44px high so they are easy to tap. */
+.os-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 24px;
+  border: 2px solid var(--black);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--black);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.os-btn--primary {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.os-btn--link {
+  border-color: transparent;
+  padding: 0 8px;
+  text-decoration: underline;
+}
+
+.os-btn:disabled {
+  background: var(--beige);
+  border-color: var(--beige);
+  color: var(--black-muted);
+  cursor: not-allowed;
+}
+
+/* ---------- Fields .os-field (brand book p. 5) ---------- */
+.os-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.os-field label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.os-field input,
+.os-field select,
+.os-field textarea {
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--black);
+  font-family: var(--font-body);
+  font-size: 16px;
+}
+
+.os-field textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+/* Help text under a field */
+.os-field__help {
+  font-size: 13px;
+  color: var(--black-muted);
+}
+
+/* Error under a field: red border + icon + text, never only colour */
+.os-field--error input,
+.os-field--error select,
+.os-field--error textarea {
+  border: 2px solid var(--red);
+}
+
+.os-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--black);
+}
+
+.os-error mat-icon {
+  color: var(--red);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- Badges .os-badge (brand book p. 5) – always with text ---------- */
+.os-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--beige);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* "Soon": the occasion is close and has no gift yet */
+.os-badge--soon {
+  background: var(--blue);
+}
+
+.os-badge--info {
+  background: var(--light-blue);
+}
+
+/* Bought / given: green border + check icon + text */
+.os-badge--done {
+  background: var(--surface);
+  border-color: var(--green);
+}
+
+.os-badge mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------- Occasion card .os-occ (brand book p. 5) ----------
+   One friend, one occasion, time left and status. Blue border only when the
+   occasion is close and there is no gift yet. */
+.os-occ {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  color: var(--black);
+  text-decoration: none;
+}
+
+.os-occ--soon {
+  border-color: var(--blue);
+}
+
+.os-occ__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

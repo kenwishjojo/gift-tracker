@@ -1,0 +1,30 @@
+<a class="os-occ" [class.os-occ--soon]="isSoonWithoutGift()" [routerLink]="['/occasion', occasion.id]">
+  <app-avatar [name]="recipient?.fullName ?? ''" />
+
+  <div class="os-occ__body">
+    <span class="os-title">{{ recipient?.fullName }}</span>
+    <!-- Reads as one sentence like in the brand book, e.g. "Birthday, 3 Dec 2026 in 21 days".
+         | date is an Angular pipe: it formats the "2026-12-03" text from the API as a date. -->
+    <span>{{ occasion.name }}, {{ occasion.eventDate | date: 'd MMM y' }} {{ timeText() }}</span>
+
+    <!-- Total for all the occasion's gifts and the logged-in user's share, on one line without a separator -->
+    @if (!isForMe() && gifts.length > 0) {
+      <span class="os-meta">Total {{ total() | number: '1.0-2' }} kr., your share {{ myShare() | number: '1.0-2' }} kr.</span>
+    }
+
+    <!-- At most two badges, always with text (brand book p. 5) -->
+    <div class="os-row">
+      <span class="os-badge os-badge--info">{{ occasion.type | titlecase }}</span>
+      @if (isForMe()) {
+        <!-- Your own occasion: don't reveal whether anything is planned or bought -->
+        <span class="os-badge"><mat-icon aria-hidden="true">redeem</mat-icon> A surprise for you</span>
+      } @else if (hasBoughtGift()) {
+        <span class="os-badge os-badge--done"><mat-icon aria-hidden="true">check</mat-icon> Gift bought</span>
+      } @else if (gifts.length === 0) {
+        <span class="os-badge" [class.os-badge--soon]="isSoonWithoutGift()">No gift yet</span>
+      } @else {
+        <span class="os-badge">{{ gifts.length }} gift {{ gifts.length === 1 ? 'idea' : 'ideas' }}</span>
+      }
+    </div>
+  </div>
+</a>

@@ -19,4 +19,8 @@ public class Gift
 
     // "idea", "planned", "bought" or "given"
     public string Status { get; set; } = "";
+
+    // How many people split the price (1 = not split, the database checks it is at least 1).
+    // Each person's share is Price / SplitCount – calculated, not stored (3NF).
+    public int SplitCount { get; set; } = 1;
 }

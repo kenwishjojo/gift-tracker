@@ -1,0 +1,32 @@
+.header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.gifts-title {
+  justify-content: space-between;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.gifts-title h2 {
+  margin: 0;
+}
+
+.gift-top {
+  justify-content: space-between;
+}
+
+.totals {
+  gap: 4px;
+  margin-top: 16px;
+}
+
+/* Total price and your share, each on its own line */
+.prices {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

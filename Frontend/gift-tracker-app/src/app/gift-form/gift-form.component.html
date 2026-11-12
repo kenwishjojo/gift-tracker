@@ -1,0 +1,108 @@
+@if (gift && occasion) {
+  <a [routerLink]="['/occasion', occasion.id]">Back to {{ occasion.name }}</a>
+
+  <h1>{{ gift.id === 0 ? 'Add gift idea' : 'Edit gift' }}</h1>
+  <p>{{ occasion.name }}, for {{ recipient?.fullName }}</p>
+
+  @if (isForMe()) {
+    <!-- Your own occasion: no form and no gift details, so the surprise isn't spoiled -->
+    <p class="os-info">This occasion is for you, so the gifts are a surprise. Your friends and family plan them here.</p>
+  } @else {
+    <!-- #giftForm="ngForm" is a template reference variable for the whole form, so we can check
+         giftForm.invalid. Each field gets its own, e.g. #nameField="ngModel" (Lecture 7). -->
+    <form #giftForm="ngForm" (ngSubmit)="saveGift()" class="os-card os-stack form">
+      <!-- Name: required. Errors only show after the user has typed in or left the field
+           (dirty || touched = "progressive enhancement", Lecture 7), not as soon as the page opens. -->
+      <div class="os-field" [class.os-field--error]="nameField.invalid && (nameField.dirty || nameField.touched)">
+        <label for="name">Gift idea</label>
+        <input id="name" name="name" type="text" [(ngModel)]="gift.name" #nameField="ngModel" required />
+        @if (nameField.invalid && (nameField.dirty || nameField.touched)) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Oops, the gift needs a name, e.g. Ceramic mug</span>
+        }
+      </div>
+
+      <div class="os-field">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" [(ngModel)]="gift.description"></textarea>
+        <span class="os-field__help">Optional, e.g. colour or size</span>
+      </div>
+
+      <!-- Price: optional, but never below 0 -->
+      <div class="os-field" [class.os-field--error]="priceField.invalid && (priceField.dirty || priceField.touched)">
+        <label for="price">Price (kr.)</label>
+        <input id="price" name="price" type="number" min="0" step="1" [(ngModel)]="gift.price" #priceField="ngModel" />
+        @if (priceField.errors?.['min']) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Oops, the price can't be below 0, e.g. 300</span>
+        } @else {
+          <span class="os-field__help">Optional – leave it empty if you don't know it yet</span>
+        }
+      </div>
+
+      <!-- Split the price: a checkbox two-way bound with [(ngModel)]. The number field below is only
+           shown while the checkbox is ticked (@if, the built-in control flow from the Angular lectures). -->
+      <label class="split-toggle">
+        <input type="checkbox" name="isSplit" [(ngModel)]="isSplit" (ngModelChange)="onSplitChange()" />
+        Split the price with others
+      </label>
+
+      @if (isSplit) {
+        <!-- Number of people: required and at least 2. Validation in layers (Lecture 7): this min="2" gives
+             quick feedback in the browser, and the database check chk_gift_splitcount (splitcount >= 1)
+             is the last line of defence if someone calls the API directly. -->
+        <div class="os-field" [class.os-field--error]="splitField.invalid && (splitField.dirty || splitField.touched)">
+          <label for="splitCount">How many people, including you?</label>
+          <input id="splitCount" name="splitCount" type="number" min="2" step="1"
+                 [(ngModel)]="gift.splitCount" #splitField="ngModel" required />
+          @if (splitField.invalid && (splitField.dirty || splitField.touched)) {
+            <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Oops, a split needs at least 2 people, e.g. 3</span>
+          }
+        </div>
+      }
+
+      <!-- Total and your share update while the user types, because both read from this.gift -->
+      @if (gift.price !== null && share() !== null) {
+        <div class="os-info os-stack prices">
+          <span>Total price: <strong>{{ gift.price | number: '1.0-2' }} kr.</strong></span>
+          <span>Your share: <strong>{{ share() | number: '1.0-2' }} kr.</strong>
+            @if (isSplit) { ({{ gift.splitCount }} people) }
+          </span>
+        </div>
+      }
+
+      <div class="os-field">
+        <label for="link">Link</label>
+        <input id="link" name="link" type="url" [(ngModel)]="gift.link" placeholder="https://" />
+        <span class="os-field__help">Optional – where the gift can be bought</span>
+      </div>
+
+      <!-- Status: required, one of the values the database allows -->
+      <div class="os-field" [class.os-field--error]="statusField.invalid && (statusField.dirty || statusField.touched)">
+        <label for="status">Status</label>
+        <select id="status" name="status" [(ngModel)]="gift.status" #statusField="ngModel" required>
+          @for (status of statuses; track status) {
+            <option [value]="status">{{ status | titlecase }}</option>
+          }
+        </select>
+        @if (statusField.invalid && (statusField.dirty || statusField.touched)) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose a status</span>
+        }
+      </div>
+
+      @if (errorMessage) {
+        <p class="os-error"><mat-icon aria-hidden="true">error</mat-icon> {{ errorMessage }}</p>
+      }
+
+      <div class="os-row">
+        <!-- The one blue (primary) button on this screen. Disabled while the form is invalid
+             ("disable submit when invalid", a validation best practice from Lecture 7). -->
+        <button type="submit" class="os-btn os-btn--primary" [disabled]="giftForm.invalid">Save gift</button>
+        <a class="os-btn" [routerLink]="['/occasion', occasion.id]">Cancel</a>
+      </div>
+      @if (giftForm.invalid) {
+        <span class="os-meta">Fix the fields marked above to save the gift.</span>
+      }
+    </form>
+  }
+} @else {
+  <p>Loading…</p>
+}

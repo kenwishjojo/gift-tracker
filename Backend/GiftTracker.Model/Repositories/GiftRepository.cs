@@ -87,10 +87,12 @@ public class GiftRepository : BaseRepository
             var cmd = dbConn.CreateCommand();
             cmd.CommandText = @"
                 insert into gift
-                (occasionid, buyerid, name, description, price, link, status)
+                (occasionid, buyerid, name, description, price, link, status, splitcount)
                 values
-                (@occasionid, @buyerid, @name, @description, @price, @link, @status)
+                (@occasionid, @buyerid, @name, @description, @price, @link, @status, @splitcount)
                 returning id";
+            // Parameterised query: the values are sent separately from the SQL text, which protects
+            // against SQL injection (never paste user input into the SQL string – Lecture 6, E6.4)
             cmd.Parameters.AddWithValue("@occasionid", NpgsqlDbType.Integer, g.OccasionId);
             cmd.Parameters.AddWithValue("@buyerid", NpgsqlDbType.Integer, g.BuyerId);
             cmd.Parameters.AddWithValue("@name", NpgsqlDbType.Text, g.Name);
@@ -98,6 +100,7 @@ public class GiftRepository : BaseRepository
             cmd.Parameters.AddWithValue("@price", NpgsqlDbType.Numeric, DbValue(g.Price));
             cmd.Parameters.AddWithValue("@link", NpgsqlDbType.Text, DbValue(g.Link));
             cmd.Parameters.AddWithValue("@status", NpgsqlDbType.Text, g.Status);
+            cmd.Parameters.AddWithValue("@splitcount", NpgsqlDbType.Integer, g.SplitCount);
             return InsertAndGetId(dbConn, cmd);
         }
         finally
@@ -121,7 +124,8 @@ public class GiftRepository : BaseRepository
                 description = @description,
                 price = @price,
                 link = @link,
-                status = @status
+                status = @status,
+                splitcount = @splitcount
                 where id = @id";
             cmd.Parameters.AddWithValue("@occasionid", NpgsqlDbType.Integer, g.OccasionId);
             cmd.Parameters.AddWithValue("@buyerid", NpgsqlDbType.Integer, g.BuyerId);
@@ -130,6 +134,7 @@ public class GiftRepository : BaseRepository
             cmd.Parameters.AddWithValue("@price", NpgsqlDbType.Numeric, DbValue(g.Price));
             cmd.Parameters.AddWithValue("@link", NpgsqlDbType.Text, DbValue(g.Link));
             cmd.Parameters.AddWithValue("@status", NpgsqlDbType.Text, g.Status);
+            cmd.Parameters.AddWithValue("@splitcount", NpgsqlDbType.Integer, g.SplitCount);
             cmd.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, g.Id);
             return UpdateData(dbConn, cmd);
         }
@@ -168,7 +173,8 @@ public class GiftRepository : BaseRepository
             Description = ReadNullableString(data, "description"),
             Price = ReadNullableDecimal(data, "price"),
             Link = ReadNullableString(data, "link"),
-            Status = Convert.ToString(data["status"])!
+            Status = Convert.ToString(data["status"])!,
+            SplitCount = Convert.ToInt32(data["splitcount"])
         };
     }
 }

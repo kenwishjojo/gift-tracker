@@ -1,0 +1,88 @@
+<a routerLink="/occasions">Back to occasions</a>
+
+@if (occasion) {
+  <div class="header">
+    <app-avatar [name]="profileName(occasion.recipientId)" />
+    <div>
+      <h1>{{ occasion.name }}</h1>
+      <p class="os-row">
+        <span>For {{ profileName(occasion.recipientId) }} on {{ occasion.eventDate | date: 'd MMMM y' }}</span>
+        <span class="os-badge os-badge--info">{{ occasion.type | titlecase }}</span>
+      </p>
+    </div>
+  </div>
+
+  @if (occasion.notes) {
+    <p class="os-info">{{ occasion.notes }}</p>
+  }
+
+  @if (isForMe()) {
+    <!-- Your own occasion: the gifts are a surprise, so we don't show them, their prices or the Add button -->
+    <p class="os-info">This occasion is for you, so the gifts are a surprise. Your friends and family plan them here.</p>
+  } @else {
+  <!-- Summary for the whole occasion. "Your share" adds up your part of the gifts you are the buyer of. -->
+  @if (gifts.length > 0) {
+    <div class="os-info os-stack totals">
+      <span>Total for all gifts: <strong>{{ total() | number: '1.0-2' }} kr.</strong></span>
+      <span>Your share: <strong>{{ myShare() | number: '1.0-2' }} kr.</strong></span>
+    </div>
+  }
+
+  <div class="gifts-title os-row">
+    <h2>Gifts</h2>
+    <!-- The one blue (primary) button on this screen -->
+    <a class="os-btn os-btn--primary" [routerLink]="['/occasion', occasion.id, 'gift', 'new']">Add gift idea</a>
+  </div>
+
+  <div class="os-stack">
+    <!-- @for repeats the card for every gift. track gift.id tells Angular which card belongs to which
+         gift, so it only redraws the cards that changed (Lecture 6). @empty shows when the list is empty. -->
+    @for (gift of gifts; track gift.id) {
+      <div class="os-card os-stack gift">
+        <div class="os-row gift-top">
+          <span class="os-title">{{ gift.name }}</span>
+          <!-- Status always with text, and an icon when bought or given -->
+          <span class="os-badge" [class.os-badge--done]="isBoughtOrGiven(gift)">
+            @if (isBoughtOrGiven(gift)) {
+              <mat-icon aria-hidden="true">check</mat-icon>
+            }
+            {{ gift.status | titlecase }}
+          </span>
+        </div>
+
+        @if (gift.description) {
+          <span>{{ gift.description }}</span>
+        }
+        <span class="os-meta">Buyer: {{ profileName(gift.buyerId) }}</span>
+
+        <!-- Price and share on their own lines instead of a "·" separator -->
+        @if (gift.price !== null) {
+          <div class="prices">
+            <span>Total price: <strong>{{ gift.price | number: '1.0-2' }} kr.</strong></span>
+            <span>
+              Your share: <strong>{{ share(gift) | number: '1.0-2' }} kr.</strong>
+              @if (gift.splitCount > 1) {
+                <span class="os-badge os-badge--info">Split between {{ gift.splitCount }}</span>
+              }
+            </span>
+          </div>
+        } @else {
+          <span class="os-meta">No price yet</span>
+        }
+
+        <div class="os-row">
+          @if (gift.link) {
+            <a [href]="gift.link" target="_blank" rel="noopener">See the gift online</a>
+          }
+          <a class="os-btn" [routerLink]="['/gift', gift.id, 'edit']">Edit</a>
+          <button type="button" class="os-btn" (click)="deleteGift(gift)">Delete</button>
+        </div>
+      </div>
+    } @empty {
+      <p>No gifts yet. Do you have an idea?</p>
+    }
+  </div>
+  }
+} @else {
+  <p>Loading…</p>
+}

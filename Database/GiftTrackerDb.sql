@@ -111,7 +111,10 @@ CREATE TABLE public.gift (
     description text,
     price numeric,
     link text,
-    status text NOT NULL
+    status text NOT NULL,
+    -- How many people split the price (1 = not split). Each person's share is price / splitcount,
+    -- calculated by the app and not stored, because it can be derived from these two columns (3NF).
+    splitcount integer NOT NULL
 );
 
 CREATE SEQUENCE public.gift_id_seq
@@ -177,6 +180,8 @@ ALTER TABLE ONLY public.occasion ALTER COLUMN id SET DEFAULT nextval('public.occ
 
 ALTER TABLE ONLY public.gift ALTER COLUMN id SET DEFAULT nextval('public.gift_id_seq'::regclass);
 
+ALTER TABLE ONLY public.gift ALTER COLUMN splitcount SET DEFAULT 1;
+
 ALTER TABLE ONLY public.gift_group ALTER COLUMN id SET DEFAULT nextval('public.gift_group_id_seq'::regclass);
 
 ALTER TABLE ONLY public.group_member ALTER COLUMN id SET DEFAULT nextval('public.group_member_id_seq'::regclass);
@@ -236,22 +241,34 @@ INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type
 
 -- The buyer is never the occasion's recipient (that rule is checked by the API)
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (1, 1, 2, 'Wool scarf', 'Dark green – her favourite colour', 349, 'https://example.com/wool-scarf', 'bought');
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (2, 1, 3, 'Concert tickets', 'Two tickets for DR Koncerthuset', 600, NULL, 'idea');
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (3, 1, 6, 'Ceramic bowl set', 'From the whole family', 1200, 'https://example.com/bowl-set', 'planned');
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (2, 1, 3, 'Concert tickets', 'Two tickets for DR Koncerthuset', 600, NULL, 'idea', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (3, 1, 6, 'Ceramic bowl set', 'From the whole family', 1200, 'https://example.com/bowl-set', 'planned', 3);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (4, 2, 1, 'Board game', 'Wingspan', 399, 'https://example.com/wingspan', 'planned');
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (5, 2, 3, 'Weekend in Skagen', 'Two nights at a small hotel', 2400, NULL, 'planned');
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (5, 2, 3, 'Weekend in Skagen', 'Two nights at a small hotel', 2400, NULL, 'planned', 3);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (6, 3, 1, 'Chalk bag', 'For climbing', 199, 'https://example.com/chalk-bag', 'bought');
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (7, 3, 2, 'Headphones', NULL, 1299, 'https://example.com/headphones', 'idea');
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (8, 4, 1, 'Coffee grinder', 'Hand grinder for his morning coffee', 450, NULL, 'idea');
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (7, 3, 2, 'Headphones', NULL, 1299, 'https://example.com/headphones', 'idea', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (8, 4, 1, 'Coffee grinder', 'Hand grinder for his morning coffee', 450, NULL, 'idea', 3);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (9, 5, 1, 'Gardening book', NULL, 249, NULL, 'planned');
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (10, 6, 1, 'Spa weekend', 'From the kids', 3000, 'https://example.com/spa-weekend', 'planned');
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (10, 6, 1, 'Spa weekend', 'From the kids', 3000, 'https://example.com/spa-weekend', 'planned', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (11, 7, 5, 'Running watch', 'Still comparing models', NULL, NULL, 'idea');
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (12, 8, 4, 'Pottery class', 'Two-hour wheel throwing class', 550, 'https://example.com/pottery', 'bought');
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (12, 8, 4, 'Pottery class', 'Two-hour wheel throwing class', 550, 'https://example.com/pottery', 'bought', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (13, 9, 3, 'Leather briefcase', NULL, 900, NULL, 'idea');
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (14, 10, 9, 'Olive tree', 'For the balcony', 350, NULL, 'bought');
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (15, 11, 5, 'Knitting kit', 'Merino wool, beginner level', 300, 'https://example.com/knitting-kit', 'planned');
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (14, 10, 9, 'Olive tree', 'For the balcony', 350, NULL, 'bought', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (15, 11, 5, 'Knitting kit', 'Merino wool, beginner level', 300, 'https://example.com/knitting-kit', 'planned', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (16, 12, 3, 'Vegetarian cookbook', NULL, 249, NULL, 'given');
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (17, 12, 2, 'Photo album', 'Homemade, with photos from our trips', 0, NULL, 'given');
+-- Split gifts: every test profile buys at least two gifts that are split with others
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (18, 9, 2, 'Graduation dinner', 'Dinner at a nice restaurant in town', 1600, NULL, 'planned', 4);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (19, 11, 4, 'Concert tickets', 'Two tickets for her favourite band', 800, NULL, 'idea', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (20, 10, 5, 'Coffee machine', 'For the new kitchen', 1800, 'https://example.com/coffee-machine', 'planned', 3);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (21, 5, 6, 'Weekend cottage stay', 'A weekend at the coast', 2000, NULL, 'idea', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (22, 1, 7, 'Cooking class for two', 'Italian cooking evening', 900, 'https://example.com/cooking-class', 'planned', 3);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (23, 4, 7, 'Fishing rod', NULL, 1100, NULL, 'idea', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (24, 2, 8, 'Record player', 'He wants to start collecting vinyl', 1500, 'https://example.com/record-player', 'idea', 3);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (25, 10, 8, 'Plant set', 'Three easy plants for the flat', 400, NULL, 'bought', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (26, 9, 9, 'Laptop backpack', 'For his first job', 700, NULL, 'planned', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (27, 11, 10, 'Yoga course', 'Ten classes at her local studio', 1200, NULL, 'idea', 3);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (28, 7, 10, 'Climbing day', 'Indoor climbing with instructor', 900, 'https://example.com/climbing', 'planned', 3);
 
 -- Gifts 3, 5 and 10 are group gifts
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (1, 3, 'Family gift for Anna', 'Lars buys it, the rest of us pay him back', '2026-10-02 19:00:00+02');
@@ -276,7 +293,7 @@ SELECT pg_catalog.setval('public.connection_id_seq', 13, true);
 
 SELECT pg_catalog.setval('public.occasion_id_seq', 12, true);
 
-SELECT pg_catalog.setval('public.gift_id_seq', 17, true);
+SELECT pg_catalog.setval('public.gift_id_seq', 28, true);
 
 SELECT pg_catalog.setval('public.gift_group_id_seq', 3, true);
 
@@ -386,6 +403,11 @@ ALTER TABLE ONLY public.gift
 -- price may be NULL (not known yet); a NULL value passes a check
 ALTER TABLE ONLY public.gift
     ADD CONSTRAINT chk_gift_price CHECK (price >= 0);
+
+-- A gift is paid by at least one person. The database is the strongest validation layer and the
+-- last line of defence: it also stops wrong data sent straight to the API (Lecture 7)
+ALTER TABLE ONLY public.gift
+    ADD CONSTRAINT chk_gift_splitcount CHECK (splitcount >= 1);
 
 ALTER TABLE ONLY public.group_member
     ADD CONSTRAINT chk_group_member_role CHECK (role IN ('owner', 'viewer'));

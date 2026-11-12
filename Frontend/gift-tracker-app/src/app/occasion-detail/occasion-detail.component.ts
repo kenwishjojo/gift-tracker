@@ -3,11 +3,12 @@ import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Occasion } from '../model/occasion';
-import { Gift } from '../model/gift';
+import { Gift, shareOf, totalPrice, totalShareFor } from '../model/gift';
 import { Profile } from '../model/profile';
 import { OccasionService } from '../services/occasion.service';
 import { GiftService } from '../services/gift.service';
 import { ProfileService } from '../services/profile.service';
+import { AuthService } from '../services/auth.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 
 // Page: one occasion and its gifts
@@ -26,12 +27,15 @@ export class OccasionDetailComponent implements OnInit {
   gifts: Gift[] = [];
   profiles: Profile[] = []; // to show the recipient's and buyers' names
 
+  // Services come in through constructor injection (dependency injection, Lecture 6)
   constructor(
     private occasionService: OccasionService,
     private giftService: GiftService,
     private profileService: ProfileService,
+    private authService: AuthService, // to know who "you" are in "Your share"
   ) {}
 
+  // Runs when the page opens: fetch the data from the API through the services (Lecture 6)
   ngOnInit(): void {
     const occasionId = Number(this.id);
     this.occasionService.getOccasion(occasionId).subscribe((data) => (this.occasion = data));
@@ -42,6 +46,20 @@ export class OccasionDetailComponent implements OnInit {
   profileName(id: number): string {
     const profile = this.profiles.find((p) => p.id === id);
     return profile ? profile.fullName : '';
+  }
+
+  // The price calculations live in model/gift.ts, so this page and the occasion card use the same code
+  share(gift: Gift): number | null {
+    return shareOf(gift);
+  }
+
+  total(): number {
+    return totalPrice(this.gifts);
+  }
+
+  myShare(): number {
+    const me = this.authService.getProfile();
+    return me ? totalShareFor(this.gifts, me.id) : 0;
   }
 
   isBoughtOrGiven(gift: Gift): boolean {

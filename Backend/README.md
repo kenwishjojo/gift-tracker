@@ -80,6 +80,9 @@ Two rules can't be written as simple database checks, so the controllers check t
 - **Dates**: `dateOfBirth` and `eventDate` are `DateOnly` – send them as `"2026-12-03"`.
   `createdAt` and `joinedAt` are set by the database (default `now()`), so you don't send them.
 - **Optional (NULL) columns** are nullable in C# (`string?`, `decimal?`), e.g. `notes`, `description`, `price`, `link`.
+- **Splitting a gift**: `splitCount` is how many people share the price (1 = not split; leave it out and it is 1).
+  The database checks it is at least 1. Each person's share is `price / splitCount`, calculated by the frontend
+  and not stored (3NF).
 - **Database rules → 400 Bad Request**: if the database rejects something (duplicate email in any upper/lower case,
   a friend request to yourself or a second request between the same two people, a status/type/role that isn't in
   the list, a negative price, a second group for the same gift, a wrong foreign key...), the API answers 400 with

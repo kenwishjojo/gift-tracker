@@ -1,24 +1,36 @@
 import { Component, Input } from '@angular/core';
-import { DatePipe, TitleCasePipe } from '@angular/common';
+import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Occasion } from '../model/occasion';
 import { Profile } from '../model/profile';
-import { Gift } from '../model/gift';
+import { Gift, totalPrice, totalShareFor } from '../model/gift';
 import { AvatarComponent } from '../avatar/avatar.component';
 
 // One occasion as a card (.os-occ from the brand book): who, what, when, and gift status.
 // The parent page gives it the data through @Input.
 @Component({
   selector: 'app-occasion-card',
-  imports: [RouterLink, DatePipe, TitleCasePipe, MatIconModule, AvatarComponent],
+  imports: [RouterLink, DatePipe, DecimalPipe, TitleCasePipe, MatIconModule, AvatarComponent],
   templateUrl: './occasion-card.component.html',
   styleUrl: './occasion-card.component.css',
 })
 export class OccasionCardComponent {
+  // @Input: the parent page passes the data in, like [student] into StudentCard in Lecture 6.
+  // The ! tells TypeScript the value will be set by the parent before it is used.
   @Input() occasion!: Occasion;
   @Input() recipient?: Profile; // the person who gets the gifts
   @Input() gifts: Gift[] = []; // the gifts for this occasion
+  @Input() meId = 0; // the logged-in user's id, for "Your share"
+
+  // Same calculations as on the occasion page (shared functions in model/gift.ts)
+  total(): number {
+    return totalPrice(this.gifts);
+  }
+
+  myShare(): number {
+    return totalShareFor(this.gifts, this.meId);
+  }
 
   // Number of days from today until the occasion (negative if it is over)
   daysLeft(): number {
@@ -29,12 +41,13 @@ export class OccasionCardComponent {
     return Math.round((eventDay.getTime() - today.getTime()) / oneDay);
   }
 
+  // The text after the date, e.g. "in 21 days" (written so it follows the date without a separator)
   timeText(): string {
     const days = this.daysLeft();
-    if (days === 0) return 'today';
-    if (days === 1) return 'tomorrow';
+    if (days === 0) return 'is today';
+    if (days === 1) return 'is tomorrow';
     if (days > 1) return `in ${days} days`;
-    return 'over';
+    return 'has passed';
   }
 
   // A gift counts as done when it is bought or already given

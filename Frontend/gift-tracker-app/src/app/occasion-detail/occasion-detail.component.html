@@ -6,7 +6,7 @@
     <div>
       <h1>{{ occasion.name }}</h1>
       <p class="os-row">
-        <span>For {{ profileName(occasion.recipientId) }} · {{ occasion.eventDate | date: 'd MMMM y' }}</span>
+        <span>For {{ profileName(occasion.recipientId) }} on {{ occasion.eventDate | date: 'd MMMM y' }}</span>
         <span class="os-badge os-badge--info">{{ occasion.type | titlecase }}</span>
       </p>
     </div>
@@ -16,6 +16,14 @@
     <p class="os-info">{{ occasion.notes }}</p>
   }
 
+  <!-- Summary for the whole occasion. "Your share" adds up your part of the gifts you are the buyer of. -->
+  @if (gifts.length > 0) {
+    <div class="os-info os-stack totals">
+      <span>Total for all gifts: <strong>{{ total() | number: '1.0-2' }} kr.</strong></span>
+      <span>Your share: <strong>{{ myShare() | number: '1.0-2' }} kr.</strong></span>
+    </div>
+  }
+
   <div class="gifts-title os-row">
     <h2>Gifts</h2>
     <!-- The one blue (primary) button on this screen -->
@@ -23,6 +31,8 @@
   </div>
 
   <div class="os-stack">
+    <!-- @for repeats the card for every gift. track gift.id tells Angular which card belongs to which
+         gift, so it only redraws the cards that changed (Lecture 6). @empty shows when the list is empty. -->
     @for (gift of gifts; track gift.id) {
       <div class="os-card os-stack gift">
         <div class="os-row gift-top">
@@ -39,12 +49,22 @@
         @if (gift.description) {
           <span>{{ gift.description }}</span>
         }
-        <span class="os-meta">
-          Buyer: {{ profileName(gift.buyerId) }}
-          @if (gift.price !== null) {
-            · {{ gift.price | number: '1.0-2' }} kr.
-          }
-        </span>
+        <span class="os-meta">Buyer: {{ profileName(gift.buyerId) }}</span>
+
+        <!-- Price and share on their own lines instead of a "·" separator -->
+        @if (gift.price !== null) {
+          <div class="prices">
+            <span>Total price: <strong>{{ gift.price | number: '1.0-2' }} kr.</strong></span>
+            <span>
+              Your share: <strong>{{ share(gift) | number: '1.0-2' }} kr.</strong>
+              @if (gift.splitCount > 1) {
+                <span class="os-badge os-badge--info">Split between {{ gift.splitCount }}</span>
+              }
+            </span>
+          </div>
+        } @else {
+          <span class="os-meta">No price yet</span>
+        }
 
         <div class="os-row">
           @if (gift.link) {

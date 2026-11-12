@@ -5,6 +5,7 @@ import { Gift } from '../model/gift';
 import { OccasionService } from '../services/occasion.service';
 import { ProfileService } from '../services/profile.service';
 import { GiftService } from '../services/gift.service';
+import { AuthService } from '../services/auth.service';
 import { OccasionCardComponent } from '../occasion-card/occasion-card.component';
 
 // Page: all occasions, the next one first
@@ -19,14 +20,17 @@ export class OccasionListComponent implements OnInit {
   past: Occasion[] = [];
   profiles: Profile[] = []; // to show the recipient's name on each card
   gifts: Gift[] = []; // to show the gift status on each card
+  meId = 0; // the logged-in user, passed to each card for "Your share"
 
   constructor(
     private occasionService: OccasionService,
     private profileService: ProfileService,
     private giftService: GiftService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    this.meId = this.authService.getProfile()?.id ?? 0;
     this.occasionService.getOccasions().subscribe((data) => {
       // Dates are text like "2026-12-03", so sorting the text also sorts by date
       const sorted = data.sort((a, b) => a.eventDate.localeCompare(b.eventDate));

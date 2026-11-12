@@ -2,9 +2,9 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
-import { TitleCasePipe } from '@angular/common';
+import { DecimalPipe, TitleCasePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { Gift, GIFT_STATUSES } from '../model/gift';
+import { Gift, GIFT_STATUSES, shareOf } from '../model/gift';
 import { Occasion } from '../model/occasion';
 import { Profile } from '../model/profile';
 import { GiftService } from '../services/gift.service';
@@ -17,7 +17,7 @@ import { AuthService } from '../services/auth.service';
 // and the validation rules (required, min) are written in the HTML (Lecture 7).
 @Component({
   selector: 'app-gift-form',
-  imports: [FormsModule, RouterLink, TitleCasePipe, MatIconModule],
+  imports: [FormsModule, RouterLink, DecimalPipe, TitleCasePipe, MatIconModule],
   templateUrl: './gift-form.component.html',
   styleUrl: './gift-form.component.css',
 })
@@ -33,6 +33,12 @@ export class GiftFormComponent implements OnInit {
   me: Profile | null = null; // the logged-in user
   errorMessage = '';
 
+  // Bound to the "Split the price" checkbox with [(ngModel)]. Not sent to the API on its own:
+  // when it is off we save splitCount = 1 (see saveGift).
+  isSplit = false;
+
+  // Constructor injection (dependency injection, Lecture 6): Angular creates the services
+  // and hands them to the component, so every page shares the same service objects
   constructor(
     private giftService: GiftService,
     private occasionService: OccasionService,
@@ -41,12 +47,15 @@ export class GiftFormComponent implements OnInit {
     private router: Router,
   ) {}
 
+  // ngOnInit runs once when the component starts – the place to fetch data (Lecture 6)
   ngOnInit(): void {
     this.me = this.authService.getProfile();
     if (this.id) {
-      // Edit: load the gift, then its occasion
+      // Edit: load the gift, then its occasion.
+      // getGift returns an Observable; the code in subscribe runs when the API answers (Lecture 6)
       this.giftService.getGift(Number(this.id)).subscribe((gift) => {
         this.gift = gift;
+        this.isSplit = gift.splitCount > 1; // tick the checkbox if the gift is already split
         this.loadOccasion(gift.occasionId);
       });
     } else {
@@ -61,6 +70,7 @@ export class GiftFormComponent implements OnInit {
         price: null,
         link: null,
         status: 'idea',
+        splitCount: 1, // not split until the user ticks "Split the price"
       };
       this.loadOccasion(this.gift.occasionId);
     }
@@ -80,11 +90,26 @@ export class GiftFormComponent implements OnInit {
     return !!this.gift && !!this.occasion && this.gift.buyerId === this.occasion.recipientId;
   }
 
+  // When the checkbox is ticked we start at 2 people, the smallest real split
+  onSplitChange(): void {
+    if (this.gift) {
+      this.gift.splitCount = this.isSplit ? Math.max(this.gift.splitCount, 2) : 1;
+    }
+  }
+
+  // Each person's share, shown live under the price while the user types (null if no price yet)
+  share(): number | null {
+    return this.gift ? shareOf(this.gift) : null;
+  }
+
   saveGift(): void {
     if (!this.gift) {
       return;
     }
     this.errorMessage = '';
+    if (!this.isSplit) {
+      this.gift.splitCount = 1; // not split: one person pays it all
+    }
     if (this.gift.id === 0) {
       this.giftService.addGift(this.gift).subscribe({
         next: () => this.goBack(),

@@ -18,3 +18,15 @@
 .gift-top {
   justify-content: space-between;
 }
+
+.totals {
+  gap: 4px;
+  margin-top: 16px;
+}
+
+/* Total price and your share, each on its own line */
+.prices {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

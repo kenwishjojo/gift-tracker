@@ -8,6 +8,7 @@
   @if (authService.isLoggedIn()) {
     <nav class="menu">
       <a routerLink="/occasions">Occasions</a>
+      <a routerLink="/friends">Friends</a>
       <a [routerLink]="['/profile', authService.getProfile()?.id]">My profile</a>
       <button type="button" class="os-btn os-btn--link" (click)="logout()">Log out</button>
     </nav>

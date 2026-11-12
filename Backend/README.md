@@ -57,7 +57,7 @@ the login (no tokens): the frontend uses it to know who the user is.
 
 ## Rules checked by the API
 
-Two rules can't be written as simple database checks, so the controllers check them and answer
+These rules can't be written as simple database checks, so the controllers check them and answer
 **400 Bad Request** with a message:
 
 - **A gift's buyer can't be its recipient.** The recipient isn't stored on `gift` – it's the
@@ -71,6 +71,15 @@ Two rules can't be written as simple database checks, so the controllers check t
   - `/api/GroupMember` won't add a second owner, won't turn the owner into a viewer or move them to another
     group, and won't delete the owner (delete the gift group instead). Changing who the owner is isn't
     supported yet.
+- **Friend requests** (`/api/Connection`):
+  - `POST` only accepts `status: "pending"` – a friendship always starts as a request.
+  - `PUT` can't change who the two people are, and an accepted friendship can't go back to pending.
+    So the only real change is accepting (pending → accepted). Declining, cancelling and removing a
+    friend are all `DELETE`.
+  - The database already stops a request to yourself and a second connection between the same two
+    people in either direction.
+  - Without login tokens the API can't check that it's the addressee who accepts; the frontend only
+    shows the Accept button to the addressee.
 
 ## Things worth knowing
 

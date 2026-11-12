@@ -25,4 +25,19 @@ export class OccasionService {
   getOccasion(id: number): Observable<Occasion> {
     return this.http.get<Occasion>(`${this.baseUrl}/${id}`);
   }
+
+  // POST returns the new occasion with the id the database gave it
+  addOccasion(occasion: Occasion): Observable<Occasion> {
+    return this.http.post<Occasion>(this.baseUrl, occasion);
+  }
+
+  // PUT sends the whole occasion (id in the body)
+  updateOccasion(occasion: Occasion): Observable<void> {
+    return this.http.put<void>(this.baseUrl, occasion);
+  }
+
+  // Also deletes the occasion's gifts (on delete cascade in the database)
+  deleteOccasion(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

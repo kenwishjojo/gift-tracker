@@ -16,6 +16,12 @@
     <p class="os-info">{{ occasion.notes }}</p>
   }
 
+  <!-- Secondary buttons (black border): the blue one on this page is "Add gift idea" -->
+  <div class="os-row occasion-actions">
+    <a class="os-btn" [routerLink]="['/occasion', occasion.id, 'edit']">Edit occasion</a>
+    <button type="button" class="os-btn" (click)="deleteOccasion()">Delete occasion</button>
+  </div>
+
   @if (isForMe()) {
     <!-- Your own occasion: the gifts are a surprise, so we don't show them, their prices or the Add button -->
     <p class="os-info">This occasion is for you, so the gifts are a surprise. Your friends and family plan them here.</p>

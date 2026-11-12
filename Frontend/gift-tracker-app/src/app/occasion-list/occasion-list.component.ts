@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Occasion } from '../model/occasion';
 import { Profile } from '../model/profile';
 import { Gift } from '../model/gift';
@@ -11,7 +12,7 @@ import { OccasionCardComponent } from '../occasion-card/occasion-card.component'
 // Page: all occasions, the next one first
 @Component({
   selector: 'app-occasion-list',
-  imports: [OccasionCardComponent],
+  imports: [RouterLink, OccasionCardComponent],
   templateUrl: './occasion-list.component.html',
   styleUrl: './occasion-list.component.css',
 })

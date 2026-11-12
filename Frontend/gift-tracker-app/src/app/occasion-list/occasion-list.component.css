@@ -1,0 +1,9 @@
+/* Title on the left, Add button on the right (wraps under the title on a narrow phone) */
+.title-row {
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.title-row h1 {
+  margin: 0;
+}

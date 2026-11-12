@@ -1,0 +1,81 @@
+@if (occasion) {
+  <a [routerLink]="cancelLink()">Back</a>
+
+  <h1>{{ occasion.id === 0 ? 'Add occasion' : 'Edit occasion' }}</h1>
+
+  <!-- #occasionForm="ngForm" is a template reference variable for the whole form, so we can check
+       occasionForm.invalid. Each field gets its own, e.g. #nameField="ngModel" (Lecture 7). -->
+  <form #occasionForm="ngForm" (ngSubmit)="saveOccasion()" class="os-card os-stack form">
+    <!-- Who is it for: required. [ngValue] keeps the id a number (a plain value="" would make it text). -->
+    <div class="os-field" [class.os-field--error]="recipientField.touched && occasion.recipientId === 0">
+      <label for="recipient">Who is it for?</label>
+      <select id="recipient" name="recipient" [(ngModel)]="occasion.recipientId" #recipientField="ngModel">
+        <option [ngValue]="0" disabled>Choose a person</option>
+        @for (profile of profiles; track profile.id) {
+          <option [ngValue]="profile.id">{{ profile.fullName }}</option>
+        }
+      </select>
+      @if (recipientField.touched && occasion.recipientId === 0) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose who the occasion is for</span>
+      }
+    </div>
+
+    <!-- Name: required. Errors only show after the user has typed in or left the field
+         (dirty || touched = "progressive enhancement", Lecture 7). -->
+    <div class="os-field" [class.os-field--error]="nameField.invalid && (nameField.dirty || nameField.touched)">
+      <label for="name">Name of the occasion</label>
+      <input id="name" name="name" type="text" [(ngModel)]="occasion.name" #nameField="ngModel" required />
+      @if (nameField.invalid && (nameField.dirty || nameField.touched)) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Oops, the occasion needs a name, e.g. Anna's birthday</span>
+      } @else {
+        <span class="os-field__help">For example "Anna's birthday" or "Christmas 2026"</span>
+      }
+    </div>
+
+    <!-- Date: required. type="date" gives a date picker, and its value is text like "2026-12-03" –
+         the same format the API uses for eventDate. -->
+    <div class="os-field" [class.os-field--error]="dateField.invalid && (dateField.dirty || dateField.touched)">
+      <label for="eventDate">Date</label>
+      <input id="eventDate" name="eventDate" type="date" [(ngModel)]="occasion.eventDate" #dateField="ngModel" required />
+      @if (dateField.invalid && (dateField.dirty || dateField.touched)) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose the date</span>
+      }
+    </div>
+
+    <!-- Type: required, one of the values the database allows (chk_occasion_type) -->
+    <div class="os-field" [class.os-field--error]="typeField.invalid && (typeField.dirty || typeField.touched)">
+      <label for="type">Type</label>
+      <select id="type" name="type" [(ngModel)]="occasion.type" #typeField="ngModel" required>
+        @for (type of types; track type) {
+          <option [value]="type">{{ type | titlecase }}</option>
+        }
+      </select>
+      @if (typeField.invalid && (typeField.dirty || typeField.touched)) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose a type</span>
+      }
+    </div>
+
+    <div class="os-field">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" [(ngModel)]="occasion.notes"></textarea>
+      <span class="os-field__help">Optional, e.g. "Dinner at her place on Friday"</span>
+    </div>
+
+    @if (errorMessage) {
+      <p class="os-error"><mat-icon aria-hidden="true">error</mat-icon> {{ errorMessage }}</p>
+    }
+
+    <div class="os-row">
+      <!-- The one blue (primary) button on this screen. Disabled while the form is invalid or nobody
+           is chosen ("disable submit when invalid", Lecture 7). -->
+      <button type="submit" class="os-btn os-btn--primary"
+              [disabled]="occasionForm.invalid || occasion.recipientId === 0">Save occasion</button>
+      <a class="os-btn" [routerLink]="cancelLink()">Cancel</a>
+    </div>
+    @if (occasionForm.invalid || occasion.recipientId === 0) {
+      <span class="os-meta">Fill in the fields above to save the occasion.</span>
+    }
+  </form>
+} @else {
+  <p>Loading…</p>
+}

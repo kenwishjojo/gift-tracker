@@ -14,6 +14,7 @@ Frontend/gift-tracker-app/src/
     ├── home/             ← page: landing page after login       (/home)
     ├── occasion-list/    ← page: all occasions                  (/occasions)
     ├── occasion-detail/  ← page: one occasion and its gifts     (/occasion/1)
+    ├── occasion-form/    ← page: add or edit an occasion        (/occasion/new, /occasion/1/edit)
     ├── gift-form/        ← page: add or edit a gift             (/occasion/1/gift/new, /gift/1/edit)
     ├── profile/          ← page: one profile and their occasions (/profile/1)
     ├── occasion-card/    ← small component: one occasion as a card (used on the list and profile pages)
@@ -44,10 +45,10 @@ Frontend/gift-tracker-app/src/
 
 | Requirement | Where |
 |---|---|
-| At least 4 components | login, home, occasion-list, occasion-detail, gift-form, profile, occasion-card, avatar |
+| At least 4 components | login, home, occasion-list, occasion-detail, occasion-form, gift-form, profile, occasion-card, avatar |
 | Services that call the API | `services/` – `OccasionService`, `GiftService`, `ProfileService`, `AuthService` |
-| Form with two-way binding | `gift-form` (and `login`): every field uses `[(ngModel)]` |
-| Basic validation | gift name `required`, price `min="0"`, status `required` from the list; email/password on login. Errors show under the field after you touch it, and Save is disabled while the form is invalid |
+| Form with two-way binding | `gift-form`, `occasion-form` and `login`: every field uses `[(ngModel)]` |
+| Basic validation | gift name `required`, price `min="0"`, status `required` from the list, split at least 2 people; occasion person, name and date required, type from the list; email/password on login. Errors show under the field after you touch it, and Save is disabled while the form is invalid |
 
 ## Things worth knowing
 

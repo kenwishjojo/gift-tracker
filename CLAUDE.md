@@ -33,7 +33,12 @@ Read this whole file before changing anything.
 - **Step 1 done** (PR #4): `Database/GiftTrackerDb.sql` implements the 6-table design below.
 - **Step 2 done** (PR #5): `Backend/` has CRUD for all 6 tables plus the two API rules, tested in Swagger.
   The old 13-table "Option C" files are only in git history.
-- **Step 3 in progress** on branch `frontend-occasions`: `Frontend/` has no merged code yet.
+- **Step 3 done** (PRs #7 and #8): the Angular app in `Frontend/gift-tracker-app` – login → home,
+  occasions (list, page, add/edit/delete), gifts (add/edit/delete, price split with total and your share),
+  profile page, brand-book design. Gifts for your own occasions are hidden (frontend rule only).
+  Also added on the way: `POST /api/Profile/login` and `gift.splitcount` (default 1, check >= 1).
+- **Next**: step 4 (filtered endpoints). Occasion sharing is **on hold** until the group picks a design
+  (A: new `occasion_share` table, or B: use accepted `connection`s).
 
 ## Decision: switch to the new 6-table design
 

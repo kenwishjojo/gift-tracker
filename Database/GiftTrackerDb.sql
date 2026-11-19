@@ -223,6 +223,9 @@ INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) 
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (11, 3, 8, 'accepted', '2026-09-20 14:10:00+02');
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (12, 2, 8, 'pending', '2026-10-15 09:30:00+02');
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (13, 9, 10, 'pending', '2026-10-20 20:50:00+02');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (14, 4, 10, 'accepted', '2026-10-22 18:10:00+02');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (15, 10, 2, 'accepted', '2026-10-23 12:00:00+02');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (16, 6, 3, 'accepted', '2026-10-24 09:45:00+02');
 
 -- The same name and date is fine for different recipients (Christmas), and the same name for one
 -- recipient is fine on a different date (Anna's birthday in 2025 and 2026)
@@ -262,18 +265,36 @@ INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (19, 11, 4, 'Concert tickets', 'Two tickets for her favourite band', 800, NULL, 'idea', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (20, 10, 5, 'Coffee machine', 'For the new kitchen', 1800, 'https://example.com/coffee-machine', 'planned', 3);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (21, 5, 6, 'Weekend cottage stay', 'A weekend at the coast', 2000, NULL, 'idea', 2);
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (22, 1, 7, 'Cooking class for two', 'Italian cooking evening', 900, 'https://example.com/cooking-class', 'planned', 3);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (22, 1, 7, 'Cooking class for two', 'Italian cooking evening', 900, 'https://example.com/cooking-class', 'planned', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (23, 4, 7, 'Fishing rod', NULL, 1100, NULL, 'idea', 2);
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (24, 2, 8, 'Record player', 'He wants to start collecting vinyl', 1500, 'https://example.com/record-player', 'idea', 3);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (24, 2, 8, 'Record player', 'He wants to start collecting vinyl', 1500, 'https://example.com/record-player', 'idea', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (25, 10, 8, 'Plant set', 'Three easy plants for the flat', 400, NULL, 'bought', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (26, 9, 9, 'Laptop backpack', 'For his first job', 700, NULL, 'planned', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (27, 11, 10, 'Yoga course', 'Ten classes at her local studio', 1200, NULL, 'idea', 3);
-INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (28, 7, 10, 'Climbing day', 'Indoor climbing with instructor', 900, 'https://example.com/climbing', 'planned', 3);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (28, 7, 10, 'Climbing day', 'Indoor climbing with instructor', 900, 'https://example.com/climbing', 'planned', 2);
 
--- Gifts 3, 5 and 10 are group gifts
+-- Every split gift has a group: the buyer is the owner and the friends they split with are viewers.
+-- splitcount on the gift = the number of members in its group.
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (1, 3, 'Family gift for Anna', 'Lars buys it, the rest of us pay him back', '2026-10-02 19:00:00+02');
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (2, 5, 'Skagen trip for Mads', NULL, '2026-10-10 11:20:00+02');
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (3, 10, 'Spa weekend for Mum', 'Split equally', '2026-10-18 15:45:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (4, 2, 'Concert tickets', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (5, 7, 'Headphones', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (6, 8, 'Coffee grinder', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (7, 12, 'Pottery class', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (8, 14, 'Olive tree', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (9, 15, 'Knitting kit', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (10, 18, 'Graduation dinner', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (11, 19, 'Concert tickets', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (12, 20, 'Coffee machine', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (13, 21, 'Weekend cottage stay', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (14, 22, 'Cooking class for two', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (15, 23, 'Fishing rod', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (16, 24, 'Record player', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (17, 25, 'Plant set', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (18, 26, 'Laptop backpack', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (19, 27, 'Yoga course', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (20, 28, 'Climbing day', NULL, '2026-10-25 10:00:00+02');
 
 -- Each group has exactly one owner (checked by the API), who is also the gift's buyer
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (1, 1, 6, 'owner', '2026-10-02 19:00:00+02');
@@ -284,20 +305,59 @@ INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES 
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (6, 2, 8, 'viewer', '2026-10-11 17:40:00+02');
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (7, 3, 1, 'owner', '2026-10-18 15:45:00+02');
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (8, 3, 6, 'viewer', '2026-10-18 16:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (9, 4, 3, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (10, 4, 2, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (11, 5, 2, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (12, 5, 1, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (13, 6, 1, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (14, 6, 7, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (15, 6, 3, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (16, 7, 4, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (17, 7, 1, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (18, 8, 9, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (19, 8, 5, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (20, 9, 5, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (21, 9, 4, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (22, 10, 2, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (23, 10, 1, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (24, 10, 3, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (25, 10, 10, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (26, 11, 4, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (27, 11, 5, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (28, 12, 5, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (29, 12, 4, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (30, 12, 9, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (31, 13, 6, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (32, 13, 1, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (33, 14, 7, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (34, 14, 6, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (35, 15, 7, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (36, 15, 1, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (37, 16, 8, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (38, 16, 3, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (39, 17, 8, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (40, 17, 3, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (41, 18, 9, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (42, 18, 5, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (43, 19, 10, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (44, 19, 4, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (45, 19, 2, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (46, 20, 10, 'owner', '2026-10-25 10:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (47, 20, 2, 'viewer', '2026-10-25 12:00:00+02');
 COMMIT;
 
 BEGIN;
 SELECT pg_catalog.setval('public.profile_id_seq', 10, true);
 
-SELECT pg_catalog.setval('public.connection_id_seq', 13, true);
+SELECT pg_catalog.setval('public.connection_id_seq', 16, true);
 
 SELECT pg_catalog.setval('public.occasion_id_seq', 12, true);
 
 SELECT pg_catalog.setval('public.gift_id_seq', 28, true);
 
-SELECT pg_catalog.setval('public.gift_group_id_seq', 3, true);
+SELECT pg_catalog.setval('public.gift_group_id_seq', 20, true);
 
-SELECT pg_catalog.setval('public.group_member_id_seq', 8, true);
+SELECT pg_catalog.setval('public.group_member_id_seq', 47, true);
 COMMIT;
 
 -- Primary keys

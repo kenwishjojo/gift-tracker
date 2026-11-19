@@ -7,6 +7,8 @@ import { OccasionService } from '../services/occasion.service';
 import { ProfileService } from '../services/profile.service';
 import { GiftService } from '../services/gift.service';
 import { AuthService } from '../services/auth.service';
+import { GiftGroupService } from '../services/gift-group.service';
+import { GiftGroup, GroupMember, giftIdsSplitBy } from '../model/gift-group';
 import { OccasionCardComponent } from '../occasion-card/occasion-card.component';
 
 // Page: all occasions, the next one first
@@ -22,12 +24,15 @@ export class OccasionListComponent implements OnInit {
   profiles: Profile[] = []; // to show the recipient's name on each card
   gifts: Gift[] = []; // to show the gift status on each card
   meId = 0; // the logged-in user, passed to each card for "Your share"
+  groups: GiftGroup[] = []; // who splits which gift, for "Your share" on the cards
+  members: GroupMember[] = [];
 
   constructor(
     private occasionService: OccasionService,
     private profileService: ProfileService,
     private giftService: GiftService,
     private authService: AuthService,
+    private giftGroupService: GiftGroupService,
   ) {}
 
   ngOnInit(): void {
@@ -41,6 +46,8 @@ export class OccasionListComponent implements OnInit {
     });
     this.profileService.getProfiles().subscribe((data) => (this.profiles = data));
     this.giftService.getGifts().subscribe((data) => (this.gifts = data));
+    this.giftGroupService.getGroups().subscribe((data) => (this.groups = data));
+    this.giftGroupService.getMembers().subscribe((data) => (this.members = data));
   }
 
   findProfile(id: number): Profile | undefined {
@@ -61,5 +68,10 @@ export class OccasionListComponent implements OnInit {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     return `${now.getFullYear()}-${month}-${day}`;
+  }
+
+  // The gifts a friend splits with the logged-in user, passed to each card
+  mySplitGiftIds(): number[] {
+    return giftIdsSplitBy(this.meId, this.groups, this.members);
   }
 }

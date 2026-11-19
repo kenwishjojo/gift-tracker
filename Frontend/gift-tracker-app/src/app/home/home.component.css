@@ -1,0 +1,11 @@
+h2 {
+  margin-top: 32px;
+}
+
+/* A whole card is one link to the occasion; text stays black like the brand book's cards */
+.feed-item {
+  padding: 16px;
+  gap: 4px;
+  color: var(--black);
+  text-decoration: none;
+}

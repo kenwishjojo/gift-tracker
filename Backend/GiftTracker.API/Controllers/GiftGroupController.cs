@@ -10,9 +10,16 @@ public class GiftGroupController : ControllerBase
 {
     protected GiftGroupRepository Repository { get; }
 
-    public GiftGroupController(GiftGroupRepository repository)
+    // Needed to check a new group against its gift and the gift's occasion
+    protected GiftRepository GiftRepository { get; }
+    protected OccasionRepository OccasionRepository { get; }
+
+    public GiftGroupController(GiftGroupRepository repository, GiftRepository giftRepository,
+        OccasionRepository occasionRepository)
     {
         Repository = repository;
+        GiftRepository = giftRepository;
+        OccasionRepository = occasionRepository;
     }
 
     [HttpGet("{id}")]
@@ -44,6 +51,27 @@ public class GiftGroupController : ControllerBase
         if (g.OwnerId == null)
         {
             return BadRequest("ownerId is required: every gift group needs an owner");
+        }
+        Gift? gift = GiftRepository.GetGiftById(g.GiftId);
+        if (gift == null)
+        {
+            return NotFound($"Gift with id {g.GiftId} not found");
+        }
+        // Rule: the person who buys the gift is the one who owns the group
+        if (g.OwnerId != gift.BuyerId)
+        {
+            return BadRequest("The owner of a gift group must be the gift's buyer");
+        }
+        // Rule: the owner is already in the group, so they can't be in memberIds too
+        if (g.MemberIds.Contains(g.OwnerId.Value))
+        {
+            return BadRequest("The owner can't also be in memberIds");
+        }
+        // Rule: the person the gift is for can't help pay for it (same idea as "buyer can't be the recipient")
+        Occasion? occasion = OccasionRepository.GetOccasionById(gift.OccasionId);
+        if (occasion != null && g.MemberIds.Contains(occasion.RecipientId))
+        {
+            return BadRequest("The person the gift is for can't split it");
         }
         int newId = Repository.InsertGiftGroup(g);
         return Ok(Repository.GetGiftGroupById(newId));

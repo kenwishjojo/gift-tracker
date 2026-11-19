@@ -6,4 +6,26 @@
     <a class="os-btn os-btn--primary" routerLink="/occasions">See occasions</a>
     <a class="os-btn" [routerLink]="['/profile', profile.id]">My profile</a>
   </div>
+
+  <!-- The feed: gifts you split with friends. A friend sees a gift here as soon as the buyer ticks them. -->
+  <h2>Gifts you're splitting</h2>
+  <div class="os-stack">
+    @for (gift of splitGifts(); track gift.id) {
+      <a class="os-card os-stack feed-item" [routerLink]="['/occasion', gift.occasionId]">
+        <span class="os-title">{{ gift.name }}</span>
+        <span>
+          {{ occasionOf(gift)?.name }} for {{ nameOf(occasionOf(gift)?.recipientId) }},
+          {{ occasionOf(gift)?.eventDate | date: 'd MMM y' }}
+        </span>
+        <span class="os-meta">With {{ splitWith(gift) }}</span>
+        @if (gift.price !== null) {
+          <span>Total {{ gift.price | number: '1.0-2' }} kr., your share <strong>{{ share(gift) | number: '1.0-2' }} kr.</strong></span>
+        } @else {
+          <span class="os-meta">No price yet</span>
+        }
+      </a>
+    } @empty {
+      <p>You aren't splitting any gifts for upcoming occasions. When you or a friend split a gift, it shows up here.</p>
+    }
+  </div>
 }

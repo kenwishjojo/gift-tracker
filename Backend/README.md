@@ -65,8 +65,11 @@ These rules can't be written as simple database checks, so the controllers check
   `OccasionController` also checks it the other way round: you can't change an occasion's recipient to
   someone who is already buying one of its gifts.
 - **A gift group has exactly one owner** (the `group_member` with role `owner`):
-  - `POST /api/GiftGroup` needs an `ownerId`. It inserts the group **and** the owner member in one
-    transaction, so a group never exists without an owner (if the owner insert fails, the group is undone too).
+  - `POST /api/GiftGroup` needs an `ownerId`, and can take `memberIds` (the friends who split the gift).
+    It inserts the group, the owner and each friend as a `viewer` in **one transaction**, so a group never
+    exists half-saved (if any insert fails, everything is undone).
+  - The owner must be the gift's buyer, can't also be in `memberIds`, and the person the gift is for can't
+    be in the group.
   - `GET /api/GiftGroup` returns `ownerId`, found by joining `group_member`. `PUT` ignores `ownerId`.
   - `/api/GroupMember` won't add a second owner, won't turn the owner into a viewer or move them to another
     group, and won't delete the owner (delete the gift group instead). Changing who the owner is isn't
@@ -90,6 +93,7 @@ These rules can't be written as simple database checks, so the controllers check
   `createdAt` and `joinedAt` are set by the database (default `now()`), so you don't send them.
 - **Optional (NULL) columns** are nullable in C# (`string?`, `decimal?`), e.g. `notes`, `description`, `price`, `link`.
 - **Splitting a gift**: `splitCount` is how many people share the price (1 = not split; leave it out and it is 1).
+  When the gift is split with friends, it equals the number of members in the gift's `gift_group`.
   The database checks it is at least 1. Each person's share is `price / splitCount`, calculated by the frontend
   and not stored (3NF).
 - **Database rules → 400 Bad Request**: if the database rejects something (duplicate email in any upper/lower case,

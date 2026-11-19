@@ -97,7 +97,22 @@ public class GiftGroupRepository : BaseRepository
             ownerCmd.Parameters.AddWithValue("@profileid", NpgsqlDbType.Integer, g.OwnerId!);
             ownerCmd.ExecuteNonQuery();
 
-            // Only now are both rows saved. If an exception happened above, Commit is never
+            // The friends who split the gift: one group_member row each, inside the same transaction
+            foreach (int memberId in g.MemberIds)
+            {
+                var memberCmd = dbConn.CreateCommand();
+                memberCmd.Transaction = transaction;
+                memberCmd.CommandText = @"
+                    insert into group_member
+                    (groupid, profileid, role)
+                    values
+                    (@groupid, @profileid, 'viewer')";
+                memberCmd.Parameters.AddWithValue("@groupid", NpgsqlDbType.Integer, newId);
+                memberCmd.Parameters.AddWithValue("@profileid", NpgsqlDbType.Integer, memberId);
+                memberCmd.ExecuteNonQuery();
+            }
+
+            // Only now are all the rows saved. If an exception happened above, Commit is never
             // reached and the transaction is rolled back when it is disposed.
             transaction.Commit();
             return newId;

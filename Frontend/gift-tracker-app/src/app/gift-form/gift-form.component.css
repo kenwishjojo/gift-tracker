@@ -22,3 +22,29 @@
 .prices {
   gap: 4px;
 }
+
+/* The list of friends to split with: one checkbox per line, each at least 44px high (brand book p. 4) */
+.friends {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.friends legend {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.friend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.friend input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--black);
+}

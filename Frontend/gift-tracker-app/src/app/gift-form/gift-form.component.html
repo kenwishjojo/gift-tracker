@@ -38,7 +38,7 @@
         }
       </div>
 
-      <!-- Split the price: a checkbox two-way bound with [(ngModel)]. The number field below is only
+      <!-- Split the price: a checkbox two-way bound with [(ngModel)]. The list of friends below is only
            shown while the checkbox is ticked (@if, the built-in control flow from the Angular lectures). -->
       <label class="split-toggle">
         <input type="checkbox" name="isSplit" [(ngModel)]="isSplit" (ngModelChange)="onSplitChange()" />
@@ -46,17 +46,25 @@
       </label>
 
       @if (isSplit) {
-        <!-- Number of people: required and at least 2. Validation in layers (Lecture 7): this min="2" gives
-             quick feedback in the browser, and the database check chk_gift_splitcount (splitcount >= 1)
-             is the last line of defence if someone calls the API directly. -->
-        <div class="os-field" [class.os-field--error]="splitField.invalid && (splitField.dirty || splitField.touched)">
-          <label for="splitCount">How many people, including you?</label>
-          <input id="splitCount" name="splitCount" type="number" min="2" step="1"
-                 [(ngModel)]="gift.splitCount" #splitField="ngModel" required />
-          @if (splitField.invalid && (splitField.dirty || splitField.touched)) {
-            <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Oops, a split needs at least 2 people, e.g. 3</span>
+        <!-- Who splits it: one checkbox per friend. These aren't ngModel fields: (change) calls toggleFriend,
+             which keeps selectedFriendIds and splitCount (friends + you) up to date.
+             Validation in layers (Lecture 7): here at least one friend must be ticked; the API checks that
+             the owner is the buyer and that the person the gift is for isn't in the group; the database
+             checks splitcount >= 1 and that nobody is in the same group twice. -->
+        <fieldset class="os-field friends" [class.os-field--error]="splitNeedsFriends()">
+          <legend>Who are you splitting it with?</legend>
+          @for (friend of friendOptions(); track friend.id) {
+            <label class="friend">
+              <input type="checkbox" [checked]="isSelected(friend.id)" (change)="toggleFriend(friend.id)" />
+              {{ friend.fullName }}
+            </label>
+          } @empty {
+            <span class="os-field__help">You have no friends to split with yet. <a routerLink="/friends">Add friends</a> first.</span>
           }
-        </div>
+          @if (splitNeedsFriends()) {
+            <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Choose at least one friend to split with</span>
+          }
+        </fieldset>
       }
 
       <!-- Total and your share update while the user types, because both read from this.gift -->
@@ -95,10 +103,10 @@
       <div class="os-row">
         <!-- The one blue (primary) button on this screen. Disabled while the form is invalid
              ("disable submit when invalid", a validation best practice from Lecture 7). -->
-        <button type="submit" class="os-btn os-btn--primary" [disabled]="giftForm.invalid">Save gift</button>
+        <button type="submit" class="os-btn os-btn--primary" [disabled]="giftForm.invalid || splitNeedsFriends()">Save gift</button>
         <a class="os-btn" [routerLink]="['/occasion', occasion.id]">Cancel</a>
       </div>
-      @if (giftForm.invalid) {
+      @if (giftForm.invalid || splitNeedsFriends()) {
         <span class="os-meta">Fix the fields marked above to save the gift.</span>
       }
     </form>

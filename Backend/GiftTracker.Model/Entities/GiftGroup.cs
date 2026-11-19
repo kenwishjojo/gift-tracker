@@ -17,6 +17,11 @@ public class GiftGroup
     // PUT ignores it (change members with /api/GroupMember instead).
     public int? OwnerId { get; set; }
 
+    // Not a column either: the friends who split the gift with the owner. Send them when creating a
+    // group (POST) – the API adds each of them as a member with role "viewer" in the same transaction
+    // as the group and its owner. GET leaves it empty (read members with /api/GroupMember).
+    public List<int> MemberIds { get; set; } = new List<int>();
+
     // Set by the database (default now())
     public DateTime CreatedAt { get; set; }
 }

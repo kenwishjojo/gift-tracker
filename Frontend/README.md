@@ -8,10 +8,10 @@ Frontend/gift-tracker-app/src/
 ├── styles.css            ← the design system: brand colours, fonts, .os-btn / .os-field / .os-occ / .os-badge
 ├── index.html            ← loads the fonts (Outfit, Inter) and the icon font
 └── app/
-    ├── model/            ← one TypeScript interface per table we use (Profile, Occasion, Gift)
+    ├── model/            ← one TypeScript interface per table we use (Profile, Occasion, Gift, Connection, GiftGroup)
     ├── services/         ← one service per table (+ AuthService) – they call the API with HttpClient
     ├── login/            ← page: log in                         (/login – the first page)
-    ├── home/             ← page: landing page after login       (/home)
+    ├── home/             ← page: landing page + feed of gifts you split (/home)
     ├── occasion-list/    ← page: all occasions                  (/occasions)
     ├── occasion-detail/  ← page: one occasion and its gifts     (/occasion/1)
     ├── occasion-form/    ← page: add or edit an occasion        (/occasion/new, /occasion/1/edit)
@@ -47,7 +47,7 @@ Frontend/gift-tracker-app/src/
 | Requirement | Where |
 |---|---|
 | At least 4 components | login, home, occasion-list, occasion-detail, occasion-form, gift-form, profile, friends, occasion-card, avatar |
-| Services that call the API | `services/` – `OccasionService`, `GiftService`, `ProfileService`, `ConnectionService`, `AuthService` |
+| Services that call the API | `services/` – `OccasionService`, `GiftService`, `ProfileService`, `ConnectionService`, `GiftGroupService`, `AuthService` |
 | Form with two-way binding | `gift-form`, `occasion-form`, `friends` (add a friend) and `login`: every field uses `[(ngModel)]` |
 | Basic validation | gift name `required`, price `min="0"`, status `required` from the list, split at least 2 people; occasion person, name and date required, type from the list; email/password on login; a valid email to add a friend. Errors show under the field after you touch it, and Save is disabled while the form is invalid |
 
@@ -69,9 +69,14 @@ Frontend/gift-tracker-app/src/
   This is a rule in the frontend only: the API has no tokens, so it doesn't know who is asking and
   `GET /api/Gift` still returns every gift (e.g. in Swagger). Hiding it in the API would need real
   authentication (future work).
-- **Splitting a gift**: tick "Split the price with others" and enter how many people (at least 2).
-  Your share is price ÷ people, calculated in `model/gift.ts` and never stored. "Your share" on an
-  occasion adds up your share of the gifts you are the buyer of.
+- **Splitting a gift with friends**: tick "Split the price with others", then tick the friends (at least
+  one). Only your accepted friends are offered, never the person the gift is for. Saving stores the gift,
+  then replaces its `gift_group`: the old group is deleted (its members go with it) and a new one is created
+  with the buyer as owner and the friends as viewers. `splitCount` = friends + you. Your share is
+  price ÷ people, calculated in `model/gift.ts` and never stored.
+- **"Your share"** adds up your share of the gifts you buy **and** the gifts a friend splits with you.
+- **Home feed**: the gifts you split (as buyer or friend) for upcoming occasions, built in the browser from
+  gifts, occasions, groups and members (no filtered endpoints yet – step 4).
 - **API errors**: if the backend says no (400), the form shows its message.
 - **Why Angular 21 and not 22**: in Angular 22 a page doesn't update by itself when you set a
   field inside `subscribe(...)` (OnPush is the default there). Angular 21 with `zone.js` works the

@@ -41,11 +41,12 @@ export function totalPrice(gifts: Gift[]): number {
   return total;
 }
 
-// What one person pays in total: their share of every gift they are the buyer of
-export function totalShareFor(gifts: Gift[], profileId: number): number {
+// What one person pays in total: their share of every gift they buy, plus every gift a friend
+// splits with them (splitGiftIds – see giftIdsSplitBy in gift-group.ts)
+export function totalShareFor(gifts: Gift[], profileId: number, splitGiftIds: number[] = []): number {
   let total = 0;
   for (const gift of gifts) {
-    if (gift.buyerId === profileId) {
+    if (gift.buyerId === profileId || splitGiftIds.includes(gift.id)) {
       total += shareOf(gift) ?? 0;
     }
   }

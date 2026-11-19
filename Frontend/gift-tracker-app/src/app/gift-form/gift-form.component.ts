@@ -7,10 +7,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { Gift, GIFT_STATUSES, shareOf } from '../model/gift';
 import { Occasion } from '../model/occasion';
 import { Profile } from '../model/profile';
+import { Connection } from '../model/connection';
+import { GiftGroup, GroupMember } from '../model/gift-group';
 import { GiftService } from '../services/gift.service';
 import { OccasionService } from '../services/occasion.service';
 import { ProfileService } from '../services/profile.service';
 import { AuthService } from '../services/auth.service';
+import { ConnectionService } from '../services/connection.service';
+import { GiftGroupService } from '../services/gift-group.service';
 
 // Page: add a new gift (/occasion/3/gift/new) or edit one (/gift/5/edit).
 // Template-driven form: the fields are two-way bound to this.gift with [(ngModel)],
@@ -37,6 +41,12 @@ export class GiftFormComponent implements OnInit {
   // when it is off we save splitCount = 1 (see saveGift).
   isSplit = false;
 
+  // Splitting with friends: who can be chosen, who is chosen, and the gift's group if it has one
+  profiles: Profile[] = [];
+  connections: Connection[] = []; // the friendships, to find the logged-in user's friends
+  selectedFriendIds: number[] = []; // the friends ticked in the list
+  existingGroup?: GiftGroup; // edit: the group the gift already has (it is replaced when saving)
+
   // Constructor injection (dependency injection, Lecture 6): Angular creates the services
   // and hands them to the component, so every page shares the same service objects
   constructor(
@@ -44,12 +54,16 @@ export class GiftFormComponent implements OnInit {
     private occasionService: OccasionService,
     private profileService: ProfileService,
     private authService: AuthService,
+    private connectionService: ConnectionService,
+    private giftGroupService: GiftGroupService,
     private router: Router,
   ) {}
 
   // ngOnInit runs once when the component starts – the place to fetch data (Lecture 6)
   ngOnInit(): void {
     this.me = this.authService.getProfile();
+    this.profileService.getProfiles().subscribe((data) => (this.profiles = data));
+    this.connectionService.getConnections().subscribe((data) => (this.connections = data));
     if (this.id) {
       // Edit: load the gift, then its occasion.
       // getGift returns an Observable; the code in subscribe runs when the API answers (Lecture 6)
@@ -57,6 +71,7 @@ export class GiftFormComponent implements OnInit {
         this.gift = gift;
         this.isSplit = gift.splitCount > 1; // tick the checkbox if the gift is already split
         this.loadOccasion(gift.occasionId);
+        this.loadGroup(gift.id);
       });
     } else {
       // Add: start with an empty gift. id 0 means "new" – the database gives it a real id.
@@ -84,6 +99,64 @@ export class GiftFormComponent implements OnInit {
     });
   }
 
+  // Edit: find the gift's group and tick the friends who are already in it.
+  // (No "group for one gift" endpoint yet – step 4 – so we get all groups and members and filter.)
+  loadGroup(giftId: number): void {
+    this.giftGroupService.getGroups().subscribe((groups) => {
+      this.existingGroup = groups.find((g) => g.giftId === giftId);
+      if (this.existingGroup) {
+        const groupId = this.existingGroup.id;
+        this.giftGroupService.getMembers().subscribe((members: GroupMember[]) => {
+          this.selectedFriendIds = members
+            .filter((m) => m.groupId === groupId && m.role === 'viewer')
+            .map((m) => m.profileId);
+        });
+      }
+    });
+  }
+
+  // The people you can split with: your accepted friends, plus anyone already in the group.
+  // Never the buyer (they pay already) and never the person the gift is for (it's their present).
+  friendOptions(): Profile[] {
+    if (!this.me || !this.gift || !this.occasion) {
+      return [];
+    }
+    const meId = this.me.id;
+    const friendIds = this.connections
+      .filter((c) => c.status === 'accepted' && (c.requesterId === meId || c.addresseeId === meId))
+      .map((c) => (c.requesterId === meId ? c.addresseeId : c.requesterId));
+    const buyerId = this.gift.buyerId;
+    const recipientId = this.occasion.recipientId;
+    return this.profiles.filter(
+      (p) =>
+        (friendIds.includes(p.id) || this.selectedFriendIds.includes(p.id)) &&
+        p.id !== buyerId &&
+        p.id !== recipientId,
+    );
+  }
+
+  isSelected(profileId: number): boolean {
+    return this.selectedFriendIds.includes(profileId);
+  }
+
+  // A friend's checkbox was clicked: add or remove them, and update splitCount (friends + the buyer)
+  toggleFriend(profileId: number): void {
+    if (this.isSelected(profileId)) {
+      this.selectedFriendIds = this.selectedFriendIds.filter((id) => id !== profileId);
+    } else {
+      this.selectedFriendIds = [...this.selectedFriendIds, profileId];
+    }
+    if (this.gift) {
+      this.gift.splitCount = this.selectedFriendIds.length + 1;
+    }
+  }
+
+  // A split needs at least one friend. Not an ngModel field, so we check it ourselves and use it
+  // together with giftForm.invalid to disable the Save button.
+  splitNeedsFriends(): boolean {
+    return this.isSplit && this.selectedFriendIds.length === 0;
+  }
+
   // True when the logged-in user is the occasion's recipient. Then the form is hidden:
   // you can't add gifts to your own birthday (the API checks that too: buyer can't be the recipient),
   // and opening /gift/5/edit for a gift on your own occasion mustn't reveal the surprise either.
@@ -91,10 +164,10 @@ export class GiftFormComponent implements OnInit {
     return !!this.me && !!this.occasion && this.occasion.recipientId === this.me.id;
   }
 
-  // When the checkbox is ticked we start at 2 people, the smallest real split
+  // Ticking or unticking "Split the price": the number of people follows the chosen friends
   onSplitChange(): void {
     if (this.gift) {
-      this.gift.splitCount = this.isSplit ? Math.max(this.gift.splitCount, 2) : 1;
+      this.gift.splitCount = this.isSplit ? this.selectedFriendIds.length + 1 : 1;
     }
   }
 
@@ -110,18 +183,45 @@ export class GiftFormComponent implements OnInit {
     this.errorMessage = '';
     if (!this.isSplit) {
       this.gift.splitCount = 1; // not split: one person pays it all
+      this.selectedFriendIds = [];
     }
+    // First the gift, then its group (the group needs the gift's id)
     if (this.gift.id === 0) {
       this.giftService.addGift(this.gift).subscribe({
-        next: () => this.goBack(),
+        next: (saved) => this.saveGroup(saved.id),
         error: (err) => this.showError(err),
       });
     } else {
       this.giftService.updateGift(this.gift).subscribe({
-        next: () => this.goBack(),
+        next: () => this.saveGroup(this.gift!.id),
         error: (err) => this.showError(err),
       });
     }
+  }
+
+  // Saves who splits the gift. The simplest way to change the members is to replace the whole group:
+  // delete the old one (its members go with it – on delete cascade) and create a new one with the
+  // buyer as owner and the ticked friends as viewers (one transaction in the API).
+  saveGroup(giftId: number): void {
+    if (this.existingGroup) {
+      this.giftGroupService.deleteGroup(this.existingGroup.id).subscribe({
+        next: () => this.createGroup(giftId),
+        error: (err) => this.showError(err),
+      });
+    } else {
+      this.createGroup(giftId);
+    }
+  }
+
+  createGroup(giftId: number): void {
+    if (!this.isSplit || !this.gift) {
+      this.goBack(); // not split: no group needed
+      return;
+    }
+    this.giftGroupService.addGroup(giftId, this.gift.name, this.gift.buyerId, this.selectedFriendIds).subscribe({
+      next: () => this.goBack(),
+      error: (err) => this.showError(err),
+    });
   }
 
   // Back to the occasion the gift belongs to

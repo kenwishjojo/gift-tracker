@@ -26,7 +26,7 @@
     <!-- Your own occasion: the gifts are a surprise, so we don't show them, their prices or the Add button -->
     <p class="os-info">This occasion is for you, so the gifts are a surprise. Your friends and family plan them here.</p>
   } @else {
-  <!-- Summary for the whole occasion. "Your share" adds up your part of the gifts you are the buyer of. -->
+  <!-- Summary for the whole occasion. "Your share" adds up your part of the gifts you buy or split. -->
   @if (gifts.length > 0) {
     <div class="os-info os-stack totals">
       <span>Total for all gifts: <strong>{{ total() | number: '1.0-2' }} kr.</strong></span>
@@ -65,13 +65,17 @@
         @if (gift.price !== null) {
           <div class="prices">
             <span>Total price: <strong>{{ gift.price | number: '1.0-2' }} kr.</strong></span>
+            <!-- "Your share" only when you pay for this gift; otherwise what each person pays -->
             <span>
-              Your share: <strong>{{ share(gift) | number: '1.0-2' }} kr.</strong>
+              {{ iPayFor(gift) ? 'Your share' : 'Per person' }}: <strong>{{ share(gift) | number: '1.0-2' }} kr.</strong>
               @if (gift.splitCount > 1) {
                 <span class="os-badge os-badge--info">Split between {{ gift.splitCount }}</span>
               }
             </span>
           </div>
+        }
+        @if (splitWith(gift)) {
+          <span class="os-meta">{{ profileName(gift.buyerId) }} splits it with {{ splitWith(gift) }}</span>
         } @else {
           <span class="os-meta">No price yet</span>
         }

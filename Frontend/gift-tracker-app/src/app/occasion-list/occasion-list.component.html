@@ -7,7 +7,7 @@
 <div class="os-stack">
   @for (occasion of upcoming; track occasion.id) {
     <app-occasion-card [occasion]="occasion" [recipient]="findProfile(occasion.recipientId)"
-                       [gifts]="giftsFor(occasion)" [meId]="meId" />
+                       [gifts]="giftsFor(occasion)" [meId]="meId" [splitGiftIds]="mySplitGiftIds()" />
   } @empty {
     <p>No upcoming occasions. Enjoy the calm.</p>
   }
@@ -18,7 +18,7 @@
   <div class="os-stack">
     @for (occasion of past; track occasion.id) {
       <app-occasion-card [occasion]="occasion" [recipient]="findProfile(occasion.recipientId)"
-                         [gifts]="giftsFor(occasion)" [meId]="meId" />
+                         [gifts]="giftsFor(occasion)" [meId]="meId" [splitGiftIds]="mySplitGiftIds()" />
     }
   </div>
 }

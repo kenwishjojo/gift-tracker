@@ -22,6 +22,7 @@ export class OccasionCardComponent {
   @Input() recipient?: Profile; // the person who gets the gifts
   @Input() gifts: Gift[] = []; // the gifts for this occasion
   @Input() meId = 0; // the logged-in user's id, for "Your share"
+  @Input() splitGiftIds: number[] = []; // the gifts a friend splits with the logged-in user
 
   // Same calculations as on the occasion page (shared functions in model/gift.ts)
   total(): number {
@@ -29,7 +30,7 @@ export class OccasionCardComponent {
   }
 
   myShare(): number {
-    return totalShareFor(this.gifts, this.meId);
+    return totalShareFor(this.gifts, this.meId, this.splitGiftIds);
   }
 
   // Number of days from today until the occasion (negative if it is over)

@@ -22,8 +22,10 @@ The frontend calls the API, and only the API talks to the database.
 - **Occasions**: see upcoming and past occasions as cards, and add, edit or delete an occasion.
 - **Gifts**: add, edit and delete gift ideas for an occasion, with name, description, price, link and
   status (idea, planned, bought or given).
-- **Split a gift**: choose how many people share the price. The app shows the total price and
-  **your share**, on the gift form, the occasion page and the occasion cards.
+- **Split a gift with friends**: tick the friends who share the price. The app shows the total price
+  and **your share** on the gift form, the occasion page and the occasion cards.
+- **Home feed**: "Gifts you're splitting" – every gift you split for an upcoming occasion, whether you
+  buy it or a friend ticked you, with the occasion, who else is in, the total and your share.
 - **Gifts are a surprise**: you don't see the gifts planned for your own occasions.
 - **Profile page**: a person's details and the occasions where they get gifts.
 - **Friends**: send a friend request by email, accept or decline requests you get, cancel ones you
@@ -59,7 +61,8 @@ a gift's buyer can't be the occasion's recipient, and a gift group has exactly o
 2. Open the Query Tool **on that database**, open `Database/GiftTrackerDb.sql` and press F5.
 
 Running the script again deletes and recreates all tables with the test data. **Re-run it after
-pulling** if the script has changed (e.g. the `splitcount` column was added in PR #7).
+pulling** if the script has changed (e.g. the `splitcount` column in PR #7, and the split groups and
+extra friendships in the test data for splitting with friends).
 
 ### Backend
 1. Put your pgAdmin password and database name in `Backend/GiftTracker.API/appsettings.Local.json`

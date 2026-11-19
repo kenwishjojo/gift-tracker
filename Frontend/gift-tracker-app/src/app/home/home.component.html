@@ -18,8 +18,9 @@
           {{ occasionOf(gift)?.eventDate | date: 'd MMM y' }}
         </span>
         <span class="os-meta">With {{ splitWith(gift) }}</span>
+        <!-- Only the logged-in user's share, like on the occasion pages (the total was taken away) -->
         @if (gift.price !== null) {
-          <span>Total {{ gift.price | number: '1.0-2' }} kr., your share <strong>{{ share(gift) | number: '1.0-2' }} kr.</strong></span>
+          <span>Your share <strong>{{ share(gift) | number: '1.0-2' }} kr.</strong></span>
         } @else {
           <span class="os-meta">No price yet</span>
         }

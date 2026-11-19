@@ -12,7 +12,7 @@ Student group project for the CBS course *Designing and Developing Digital Busin
 | `Database/` | Script that creates the 7 tables with test data | PostgreSQL / pgAdmin 4 | ✅ Done |
 | `Backend/` | The REST API and the code that talks to the database | C# / ASP.NET Core Web API, Npgsql | ✅ CRUD for all 7 tables + login |
 | `Frontend/` | The web app | Angular 21, Angular Material | ✅ First version done |
-| `docs/` | ER diagram and brand book (`GiftTracker-brandbog.pdf`) | | |
+| `docs/` | ER diagram (`er-design-with-invites.png`, 7 tables) and brand book (`GiftTracker-brandbog.pdf`) | | |
 
 The frontend calls the API, and only the API talks to the database.
 
@@ -54,7 +54,7 @@ The frontend calls the API, and only the API talks to the database.
 | `gift` | A gift for an occasion, who buys it, and how many people split the price (`splitcount`). The recipient comes from the occasion |
 | `gift_group` | People splitting one gift (at most one group per gift) |
 | `group_member` | A member of a gift group, either `owner` (exactly one) or `viewer` |
-| `occasion_invite` | A friend invited to an occasion by its creator (added after the ER diagram – update it for the report) |
+| `occasion_invite` | A friend invited to an occasion by its creator |
 
 Rules checked in the API because the database can't check them on its own: a gift's buyer can't be the
 occasion's recipient, a gift group has exactly one owner, the recipient and invited people must be the

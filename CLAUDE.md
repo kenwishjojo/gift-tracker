@@ -41,12 +41,14 @@ Read this whole file before changing anything.
   sign-up and terms pages; delete account; a 7th table **`occasion_invite`** (you only see occasions you made
   or were invited to, never ones for you); `occasion.recipientname` for people without an account; past
   occasions locked (frontend + API); a shared warning box (`confirm-dialog`) before every delete and edit save.
-- **Next**: step 4 (filtered endpoints). The ER diagram in `docs/` still shows 6 tables – update it.
+- **Next**: step 4 (filtered endpoints).
 
 ## Decision: switch to the new 6-table design
 
 The group decided to build the app on the **"without preferences" design** instead. Diagram:
-`docs/er-design-without-preferences.svg`. The old Option C SQL + backend are to be **replaced**
+`docs/er-design-without-preferences.svg` (the original 6 tables). The current diagram with the 7th table
+`occasion_invite` is `docs/er-design-with-invites.png` (Figma file "Wireframe Review – gift Tracker", frame
+"ER Diagram - Gift Tracker without preferences 2"). The old Option C SQL + backend are to be **replaced**
 (they stay in git history).
 
 ### Tables (PostgreSQL types, lowercase names like the rest of the project)

@@ -1,6 +1,6 @@
 -- Gift Tracker – database script (ER design "without preferences", 7 tables: the 6 from the
 -- diagram + occasion_invite, added so occasions are only seen by their creator and invited friends)
--- Diagram: docs/er-design-without-preferences.svg
+-- Diagram: docs/er-design-with-invites.png (Figma: "ER Diagram - Gift Tracker without preferences 2")
 -- Run this in pgAdmin's Query Tool on the app-gifttrackerdb database.
 -- Built in the same order as the class script: drop -> create tables + sequences ->
 -- id defaults -> test data -> setval -> primary keys -> unique keys -> foreign keys -> checks

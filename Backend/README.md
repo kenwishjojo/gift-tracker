@@ -13,7 +13,7 @@ Backend/
     └── Repositories/             ← SQL for each table + BaseRepository
 ```
 
-The 6 tables are the "without preferences" design (`../docs/er-design-without-preferences.svg`):
+The 7 tables are the "without preferences" design with invites (`../docs/er-design-with-invites.png`):
 `profile`, `connection`, `occasion`, `gift`, `gift_group`, `group_member`.
 
 ## Run it

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Occasion } from '../model/occasion';
+import { Occasion, OccasionInvite, canSee, recipientNameOf } from '../model/occasion';
 import { Profile } from '../model/profile';
 import { Gift } from '../model/gift';
 import { OccasionService } from '../services/occasion.service';
@@ -8,10 +8,12 @@ import { ProfileService } from '../services/profile.service';
 import { GiftService } from '../services/gift.service';
 import { AuthService } from '../services/auth.service';
 import { GiftGroupService } from '../services/gift-group.service';
+import { InviteService } from '../services/invite.service';
 import { GiftGroup, GroupMember, giftIdsSplitBy } from '../model/gift-group';
 import { OccasionCardComponent } from '../occasion-card/occasion-card.component';
 
-// Page: all occasions, the next one first
+// Page: the occasions the logged-in user can see, the next one first.
+// You see an occasion when you made it or are invited to it – never when it is for you (canSee in model/occasion.ts).
 @Component({
   selector: 'app-occasion-list',
   imports: [RouterLink, OccasionCardComponent],
@@ -19,8 +21,8 @@ import { OccasionCardComponent } from '../occasion-card/occasion-card.component'
   styleUrl: './occasion-list.component.css',
 })
 export class OccasionListComponent implements OnInit {
-  upcoming: Occasion[] = [];
-  past: Occasion[] = [];
+  occasions: Occasion[] = []; // all occasions from the API – upcoming() and past() pick the visible ones
+  invites: OccasionInvite[] = []; // who is invited where, to decide what the user can see
   profiles: Profile[] = []; // to show the recipient's name on each card
   gifts: Gift[] = []; // to show the gift status on each card
   meId = 0; // the logged-in user, passed to each card for "Your share"
@@ -33,32 +35,43 @@ export class OccasionListComponent implements OnInit {
     private giftService: GiftService,
     private authService: AuthService,
     private giftGroupService: GiftGroupService,
+    private inviteService: InviteService,
   ) {}
 
   ngOnInit(): void {
     this.meId = this.authService.getProfile()?.id ?? 0;
-    this.occasionService.getOccasions().subscribe((data) => {
-      // Dates are text like "2026-12-03", so sorting the text also sorts by date
-      const sorted = data.sort((a, b) => a.eventDate.localeCompare(b.eventDate));
-      const today = this.todayAsText();
-      this.upcoming = sorted.filter((o) => o.eventDate >= today);
-      this.past = sorted.filter((o) => o.eventDate < today).reverse(); // newest first
-    });
+    // Dates are text like "2026-12-03", so sorting the text also sorts by date
+    this.occasionService
+      .getOccasions()
+      .subscribe((data) => (this.occasions = data.sort((a, b) => a.eventDate.localeCompare(b.eventDate))));
+    this.inviteService.getInvites().subscribe((data) => (this.invites = data));
     this.profileService.getProfiles().subscribe((data) => (this.profiles = data));
     this.giftService.getGifts().subscribe((data) => (this.gifts = data));
     this.giftGroupService.getGroups().subscribe((data) => (this.groups = data));
     this.giftGroupService.getMembers().subscribe((data) => (this.members = data));
   }
 
-  findProfile(id: number): Profile | undefined {
-    return this.profiles.find((p) => p.id === id);
+  // Only the occasions this user may see (made by them or invited to, never for them)
+  visible(): Occasion[] {
+    return this.occasions.filter((o) => canSee(o, this.meId, this.invites));
   }
 
-  // The gifts for one occasion – none for the logged-in user's own occasions (they are a surprise)
+  upcoming(): Occasion[] {
+    const today = this.todayAsText();
+    return this.visible().filter((o) => o.eventDate >= today);
+  }
+
+  past(): Occasion[] {
+    const today = this.todayAsText();
+    return this.visible().filter((o) => o.eventDate < today).reverse(); // newest first
+  }
+
+  recipientName(occasion: Occasion): string {
+    return recipientNameOf(occasion, this.profiles);
+  }
+
+  // The gifts for one occasion (shown as status and "Your share" on its card)
   giftsFor(occasion: Occasion): Gift[] {
-    if (occasion.recipientId === this.meId) {
-      return [];
-    }
     return this.gifts.filter((g) => g.occasionId === occasion.id);
   }
 

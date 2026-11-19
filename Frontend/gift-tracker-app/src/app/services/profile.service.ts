@@ -24,4 +24,16 @@ export class ProfileService {
   updateProfile(profile: Profile): Observable<void> {
     return this.http.put<void>(this.baseUrl, profile);
   }
+
+  // Sign up: POST a new profile with a password. The API hashes the password with BCrypt and
+  // answers with the new profile (without the password). 400 if the email is already used.
+  addProfile(fullName: string, email: string, dateOfBirth: string, password: string): Observable<Profile> {
+    return this.http.post<Profile>(this.baseUrl, { fullName, email, dateOfBirth, password });
+  }
+
+  // Deleting a profile also deletes (on delete cascade in the database) their friendships, invites,
+  // the occasions they made or receive – with all gifts on them – and the gifts they buy.
+  deleteProfile(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

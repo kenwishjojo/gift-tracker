@@ -7,11 +7,15 @@ import { GiftFormComponent } from './gift-form/gift-form.component';
 import { OccasionFormComponent } from './occasion-form/occasion-form.component';
 import { ProfileComponent } from './profile/profile.component';
 import { FriendsComponent } from './friends/friends.component';
+import { SignupComponent } from './signup/signup.component';
+import { TermsComponent } from './terms/terms.component';
 
 // Which component to show for which URL
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' }, // the app starts on the login page
   { path: 'login', component: LoginComponent },
+  { path: 'signup', component: SignupComponent }, // create a new user (linked from the login page)
+  { path: 'terms', component: TermsComponent }, // terms and conditions (linked from profile and sign-up)
   { path: 'home', component: HomeComponent }, // landing page after login
   { path: 'occasions', component: OccasionListComponent },
   // 'occasion/new' must come before 'occasion/:id': Angular uses the first route that matches,

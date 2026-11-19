@@ -1,0 +1,9 @@
+/* Line length at most about 70 characters (brand book p. 4) */
+.terms {
+  max-width: 640px;
+  padding: 24px;
+}
+
+.terms h2 {
+  margin: 8px 0 0;
+}

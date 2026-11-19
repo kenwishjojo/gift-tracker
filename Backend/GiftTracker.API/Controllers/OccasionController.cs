@@ -13,10 +13,15 @@ public class OccasionController : ControllerBase
     // Needed to check the gifts of an occasion when its recipient is changed
     protected GiftRepository GiftRepository { get; }
 
-    public OccasionController(OccasionRepository repository, GiftRepository giftRepository)
+    // Needed for the rule "the recipient must be one of the creator's friends"
+    protected ConnectionRepository ConnectionRepository { get; }
+
+    public OccasionController(OccasionRepository repository, GiftRepository giftRepository,
+        ConnectionRepository connectionRepository)
     {
         Repository = repository;
         GiftRepository = giftRepository;
+        ConnectionRepository = connectionRepository;
     }
 
     [HttpGet("{id}")]
@@ -44,6 +49,11 @@ public class OccasionController : ControllerBase
         {
             return BadRequest("Occasion info not correct");
         }
+        string? error = CheckRecipientIsFriend(o);
+        if (error != null)
+        {
+            return BadRequest(error);
+        }
         int newId = Repository.InsertOccasion(o);
         return Ok(Repository.GetOccasionById(newId));
     }
@@ -60,11 +70,21 @@ public class OccasionController : ControllerBase
         {
             return NotFound($"Occasion with id {o.Id} not found");
         }
+        // Rule: a past occasion is locked – it can be viewed and deleted, but not changed
+        if (existing.IsPast())
+        {
+            return BadRequest("This occasion has passed, so it can't be changed any more");
+        }
+        string? error = CheckRecipientIsFriend(o);
+        if (error != null)
+        {
+            return BadRequest(error);
+        }
         // Rule: a gift's buyer can't be the occasion's recipient.
         // If the recipient changes, nobody who is already buying a gift may become the recipient.
         foreach (Gift g in GiftRepository.GetGiftsByOccasionId(o.Id))
         {
-            if (g.BuyerId == o.RecipientId)
+            if (o.RecipientId != null && g.BuyerId == o.RecipientId)
             {
                 return BadRequest($"Profile {o.RecipientId} is buying gift {g.Id} for this occasion, so they can't be its recipient");
             }
@@ -77,6 +97,7 @@ public class OccasionController : ControllerBase
         return BadRequest("Something went wrong");
     }
 
+    // Deleting is allowed even for past occasions (to tidy up). Also deletes its gifts and invites.
     [HttpDelete("{id}")]
     public ActionResult DeleteOccasion([FromRoute] int id)
     {
@@ -91,5 +112,17 @@ public class OccasionController : ControllerBase
             return NoContent();
         }
         return BadRequest($"Unable to delete occasion with id {id}");
+    }
+
+    // Rule: when the occasion is for a profile, that profile must be one of the creator's friends.
+    // (An occasion for someone without an account only has a RecipientName – nothing to check.)
+    // Returns an error message, or null if the occasion is fine.
+    private string? CheckRecipientIsFriend(Occasion o)
+    {
+        if (o.RecipientId != null && !ConnectionRepository.AreFriends(o.CreatedById, o.RecipientId.Value))
+        {
+            return "You can only make an occasion for one of your friends (or for someone without an account, by name)";
+        }
+        return null;
     }
 }

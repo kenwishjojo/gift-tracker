@@ -44,7 +44,7 @@ public class GiftController : ControllerBase
         {
             return BadRequest("Gift info not correct");
         }
-        string? error = CheckBuyerIsNotRecipient(g);
+        string? error = CheckGift(g);
         if (error != null)
         {
             return BadRequest(error);
@@ -65,7 +65,13 @@ public class GiftController : ControllerBase
         {
             return NotFound($"Gift with id {g.Id} not found");
         }
-        string? error = CheckBuyerIsNotRecipient(g);
+        // Also check the occasion the gift belongs to now (in case the PUT tries to move it)
+        string? pastError = CheckOccasionNotPast(existing.OccasionId);
+        if (pastError != null)
+        {
+            return BadRequest(pastError);
+        }
+        string? error = CheckGift(g);
         if (error != null)
         {
             return BadRequest(error);
@@ -86,6 +92,11 @@ public class GiftController : ControllerBase
         {
             return NotFound($"Gift with id {id} not found");
         }
+        string? pastError = CheckOccasionNotPast(existing.OccasionId);
+        if (pastError != null)
+        {
+            return BadRequest(pastError);
+        }
         bool status = Repository.DeleteGift(id);
         if (status)
         {
@@ -94,18 +105,35 @@ public class GiftController : ControllerBase
         return BadRequest($"Unable to delete gift with id {id}");
     }
 
-    // Rule: the buyer of a gift can't be the gift's recipient (the occasion's recipient).
-    // Returns an error message, or null if the gift is fine.
-    private string? CheckBuyerIsNotRecipient(Gift g)
+    // The rules for a new or changed gift. Returns an error message, or null if the gift is fine.
+    private string? CheckGift(Gift g)
     {
         Occasion? occasion = OccasionRepository.GetOccasionById(g.OccasionId);
         if (occasion == null)
         {
             return $"Occasion with id {g.OccasionId} not found";
         }
-        if (g.BuyerId == occasion.RecipientId)
+        // Rule: the gifts of a past occasion are locked
+        if (occasion.IsPast())
+        {
+            return "This occasion has passed, so its gifts can't be changed any more";
+        }
+        // Rule: the buyer of a gift can't be the gift's recipient (the occasion's recipient).
+        // (RecipientId is null when the occasion is for someone without an account.)
+        if (occasion.RecipientId != null && g.BuyerId == occasion.RecipientId)
         {
             return "The buyer can't be the recipient of the occasion";
+        }
+        return null;
+    }
+
+    // Rule: nothing about a past occasion's gifts may change. Returns an error message, or null.
+    private string? CheckOccasionNotPast(int occasionId)
+    {
+        Occasion? occasion = OccasionRepository.GetOccasionById(occasionId);
+        if (occasion != null && occasion.IsPast())
+        {
+            return "This occasion has passed, so its gifts can't be changed any more";
         }
         return null;
     }

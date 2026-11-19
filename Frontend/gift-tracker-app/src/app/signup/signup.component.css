@@ -1,0 +1,19 @@
+.signup {
+  max-width: 440px;
+  margin: 32px auto;
+  padding: 24px;
+}
+
+/* Checkbox and text on one line, at least 44px high (brand book p. 4) */
+.terms {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.terms input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--black);
+}

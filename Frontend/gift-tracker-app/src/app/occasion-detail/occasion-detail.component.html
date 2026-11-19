@@ -1,14 +1,20 @@
 <a routerLink="/occasions">Back to occasions</a>
 
-@if (occasion) {
+@if (occasion && !mayView()) {
+  <!-- Not the creator and not invited (or the occasion is for you – a surprise): show nothing about it -->
+  <p class="os-info">You aren't invited to this occasion.</p>
+} @else if (occasion) {
   <div class="header">
-    <app-avatar [name]="profileName(occasion.recipientId)" />
+    <app-avatar [name]="recipientName()" />
     <div>
       <h1>{{ occasion.name }}</h1>
       <p class="os-row">
-        <span>For {{ profileName(occasion.recipientId) }} on {{ occasion.eventDate | date: 'd MMMM y' }}</span>
+        <span>For {{ recipientName() }} on {{ occasion.eventDate | date: 'd MMMM y' }}</span>
         <span class="os-badge os-badge--info">{{ occasion.type | titlecase }}</span>
       </p>
+      @if (invitedNames()) {
+        <span class="os-meta">Invited: {{ invitedNames() }}</span>
+      }
     </div>
   </div>
 
@@ -16,28 +22,35 @@
     <p class="os-info">{{ occasion.notes }}</p>
   }
 
-  <!-- Secondary buttons (black border): the blue one on this page is "Add gift idea" -->
-  <div class="os-row occasion-actions">
-    <a class="os-btn" [routerLink]="['/occasion', occasion.id, 'edit']">Edit occasion</a>
-    <button type="button" class="os-btn" (click)="deleteOccasion()">Delete occasion</button>
-  </div>
+  @if (isLocked()) {
+    <!-- Past occasions are locked: read only (the API refuses changes too) -->
+    <p class="os-info locked"><mat-icon aria-hidden="true">lock</mat-icon> This occasion has passed, so it can't be changed any more.</p>
+  }
 
-  @if (isForMe()) {
-    <!-- Your own occasion: the gifts are a surprise, so we don't show them, their prices or the Add button -->
-    <p class="os-info">This occasion is for you, so the gifts are a surprise. Your friends and family plan them here.</p>
-  } @else {
-  <!-- Summary for the whole occasion. "Your share" adds up your part of the gifts you buy or split. -->
-  @if (gifts.length > 0) {
-    <div class="os-info os-stack totals">
-      <span>Total for all gifts: <strong>{{ total() | number: '1.0-2' }} kr.</strong></span>
+  <!-- Only the creator can edit or delete the occasion. Edit is hidden once it has passed; delete is not.
+       Secondary buttons (black border): the blue one on this page is "Add gift idea". -->
+  @if (isCreator()) {
+    <div class="os-row occasion-actions">
+      @if (!isLocked()) {
+        <a class="os-btn" [routerLink]="['/occasion', occasion.id, 'edit']">Edit occasion</a>
+      }
+      <button type="button" class="os-btn" (click)="showDeleteOccasion = true">Delete occasion</button>
+    </div>
+  }
+
+  <!-- Only the user's own share (the total for all gifts was taken away) -->
+  @if (myShare() > 0) {
+    <div class="os-info totals">
       <span>Your share: <strong>{{ myShare() | number: '1.0-2' }} kr.</strong></span>
     </div>
   }
 
   <div class="gifts-title os-row">
     <h2>Gifts</h2>
-    <!-- The one blue (primary) button on this screen -->
-    <a class="os-btn os-btn--primary" [routerLink]="['/occasion', occasion.id, 'gift', 'new']">Add gift idea</a>
+    @if (!isLocked()) {
+      <!-- The one blue (primary) button on this screen -->
+      <a class="os-btn os-btn--primary" [routerLink]="['/occasion', occasion.id, 'gift', 'new']">Add gift idea</a>
+    }
   </div>
 
   <div class="os-stack">
@@ -61,11 +74,10 @@
         }
         <span class="os-meta">Buyer: {{ profileName(gift.buyerId) }}</span>
 
-        <!-- Price and share on their own lines instead of a "·" separator -->
+        <!-- The gift's price, and "Your share" when you pay for it (otherwise what each person pays) -->
         @if (gift.price !== null) {
           <div class="prices">
-            <span>Total price: <strong>{{ gift.price | number: '1.0-2' }} kr.</strong></span>
-            <!-- "Your share" only when you pay for this gift; otherwise what each person pays -->
+            <span>Price: <strong>{{ gift.price | number: '1.0-2' }} kr.</strong></span>
             <span>
               {{ iPayFor(gift) ? 'Your share' : 'Per person' }}: <strong>{{ share(gift) | number: '1.0-2' }} kr.</strong>
               @if (gift.splitCount > 1) {
@@ -73,25 +85,46 @@
               }
             </span>
           </div>
+        } @else {
+          <span class="os-meta">No price yet</span>
         }
         @if (splitWith(gift)) {
           <span class="os-meta">{{ profileName(gift.buyerId) }} splits it with {{ splitWith(gift) }}</span>
-        } @else {
-          <span class="os-meta">No price yet</span>
         }
 
         <div class="os-row">
           @if (gift.link) {
             <a [href]="gift.link" target="_blank" rel="noopener">See the gift online</a>
           }
-          <a class="os-btn" [routerLink]="['/gift', gift.id, 'edit']">Edit</a>
-          <button type="button" class="os-btn" (click)="deleteGift(gift)">Delete</button>
+          @if (!isLocked()) {
+            <a class="os-btn" [routerLink]="['/gift', gift.id, 'edit']">Edit</a>
+            <button type="button" class="os-btn" (click)="giftToDelete = gift">Delete</button>
+          }
         </div>
       </div>
     } @empty {
       <p>No gifts yet. Do you have an idea?</p>
     }
   </div>
+
+  <!-- The warning boxes. They only exist while their @if is true; the box tells us the answer through
+       its (confirmed) and (cancelled) events (@Output in ConfirmDialogComponent). -->
+  @if (showDeleteOccasion) {
+    <app-confirm-dialog
+      title="Delete this occasion?"
+      [message]="occasion.name + ' will be deleted for everyone, and this can\'t be undone. It also deletes:'"
+      [details]="['all ' + gifts.length + ' gift(s) on it, and who splits them', 'the list of invited friends']"
+      confirmLabel="Delete occasion"
+      (confirmed)="deleteOccasion()"
+      (cancelled)="showDeleteOccasion = false" />
+  }
+  @if (giftToDelete) {
+    <app-confirm-dialog
+      title="Delete this gift?"
+      [message]="giftToDelete.name + ' will be deleted for everyone, including who splits it. This can\'t be undone.'"
+      confirmLabel="Delete gift"
+      (confirmed)="deleteGift()"
+      (cancelled)="giftToDelete = undefined" />
   }
 } @else {
   <p>Loading…</p>

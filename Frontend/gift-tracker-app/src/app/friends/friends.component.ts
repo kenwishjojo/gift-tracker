@@ -9,13 +9,14 @@ import { ConnectionService } from '../services/connection.service';
 import { ProfileService } from '../services/profile.service';
 import { AuthService } from '../services/auth.service';
 import { AvatarComponent } from '../avatar/avatar.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 // Page: send friend requests, answer the ones you got, and see your friends (/friends).
 // All data comes from the connection table: a row is a request while its status is "pending"
 // and a friendship once it is "accepted".
 @Component({
   selector: 'app-friends',
-  imports: [FormsModule, RouterLink, MatIconModule, AvatarComponent],
+  imports: [FormsModule, RouterLink, MatIconModule, AvatarComponent, ConfirmDialogComponent],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css',
 })
@@ -28,6 +29,11 @@ export class FriendsComponent implements OnInit {
   email = '';
   errorMessage = '';
   successMessage = '';
+
+  // The warning box: which connection is about to be deleted, and what the box says
+  toRemove?: Connection;
+  removeTitle = '';
+  removeMessage = '';
 
   // Constructor injection (dependency injection, Lecture 6)
   constructor(
@@ -103,12 +109,25 @@ export class FriendsComponent implements OnInit {
     this.connectionService.accept(c).subscribe(() => this.loadConnections());
   }
 
-  // Decline a request, cancel one I sent, or remove a friend – all delete the connection
-  remove(c: Connection, question: string): void {
+  // Decline a request, cancel one I sent, or remove a friend – all delete the connection.
+  // Step 1 (a button): remember which connection and which question, which opens the warning box.
+  askToRemove(c: Connection, title: string, message: string): void {
     this.clearMessages();
-    if (confirm(question)) {
-      this.connectionService.deleteConnection(c.id).subscribe(() => this.loadConnections());
+    this.toRemove = c;
+    this.removeTitle = title;
+    this.removeMessage = message;
+  }
+
+  // Step 2 (the warning box's (confirmed) event): really delete it
+  remove(): void {
+    const c = this.toRemove;
+    if (!c) {
+      return;
     }
+    this.connectionService.deleteConnection(c.id).subscribe(() => {
+      this.toRemove = undefined;
+      this.loadConnections();
+    });
   }
 
   // The database allows only one connection per pair of people, in either direction (uk_connection_pair).

@@ -3,7 +3,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Profile } from '../model/profile';
 import { Gift, shareOf } from '../model/gift';
-import { Occasion } from '../model/occasion';
+import { Occasion, recipientNameOf } from '../model/occasion';
 import { GiftGroup, GroupMember, giftIdsSplitBy, joinNames } from '../model/gift-group';
 import { AuthService } from '../services/auth.service';
 import { GiftService } from '../services/gift.service';
@@ -73,6 +73,12 @@ export class HomeComponent implements OnInit {
 
   occasionOf(gift: Gift): Occasion | undefined {
     return this.occasions.find((o) => o.id === gift.occasionId);
+  }
+
+  // The person an occasion is for: a profile's name, or a typed name if they have no account
+  recipientName(gift: Gift): string {
+    const occasion = this.occasionOf(gift);
+    return occasion ? recipientNameOf(occasion, this.profiles) : '';
   }
 
   nameOf(profileId: number | undefined): string {

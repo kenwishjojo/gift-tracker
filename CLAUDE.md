@@ -37,13 +37,18 @@ Read this whole file before changing anything.
   occasions (list, page, add/edit/delete), gifts (add/edit/delete, price split with total and your share),
   profile page, brand-book design. Gifts for your own occasions are hidden (frontend rule only).
   Also added on the way: `POST /api/Profile/login` and `gift.splitcount` (default 1, check >= 1).
-- **Next**: step 4 (filtered endpoints). Occasion sharing is **on hold** until the group picks a design
-  (A: new `occasion_share` table, or B: use accepted `connection`s).
+- **After step 3** (PRs #10, #11 and this one): friends; splitting a gift with chosen friends + Home feed;
+  sign-up and terms pages; delete account; a 7th table **`occasion_invite`** (you only see occasions you made
+  or were invited to, never ones for you); `occasion.recipientname` for people without an account; past
+  occasions locked (frontend + API); a shared warning box (`confirm-dialog`) before every delete and edit save.
+- **Next**: step 4 (filtered endpoints).
 
 ## Decision: switch to the new 6-table design
 
 The group decided to build the app on the **"without preferences" design** instead. Diagram:
-`docs/er-design-without-preferences.svg`. The old Option C SQL + backend are to be **replaced**
+`docs/er-design-without-preferences.svg` (the original 6 tables). The current diagram with the 7th table
+`occasion_invite` is `docs/er-design-with-invites.png` (Figma file "Wireframe Review – gift Tracker", frame
+"ER Diagram - Gift Tracker without preferences 2"). The old Option C SQL + backend are to be **replaced**
 (they stay in git history).
 
 ### Tables (PostgreSQL types, lowercase names like the rest of the project)
@@ -58,7 +63,9 @@ The group decided to build the app on the **"without preferences" design** inste
 - UK: the pair in **either direction** – unique index on `(least(requesterid, addresseeid), greatest(requesterid, addresseeid))`
 
 **occasion**
-- `id` int PK · `createdbyid` int FK → profile · `recipientid` int FK → profile
+- `id` int PK · `createdbyid` int FK → profile · `recipientid` int FK → profile **NULL**
+- `recipientname` text NULL – for someone without an account; exactly one of `recipientid`/`recipientname`
+  is set (`chk_occasion_recipient`), and `recipientid <> createdbyid` (`chk_occasion_not_self`)
 - `name` text · `eventdate` date · `type` text · `notes` text NULL
 - UK `(recipientid, name, eventdate)`
 
@@ -77,6 +84,10 @@ The group decided to build the app on the **"without preferences" design** inste
 - `role` text · `joinedat` timestamptz default now() · UK `(groupid, profileid)`
 - The group's owner is the member with role `owner` (no `ownerid` column on gift_group).
 
+**occasion_invite** (added later – not in the original diagram)
+- `id` int PK · `occasionid` int FK → occasion (cascade) · `profileid` int FK → profile (cascade)
+- `invitedat` timestamptz default now() · UK `(occasionid, profileid)`
+
 ### Check constraints
 
 - `connection.status IN ('pending', 'accepted')` and `requesterid <> addresseeid`
@@ -88,6 +99,10 @@ The group decided to build the app on the **"without preferences" design** inste
 
 - The buyer of a gift can't be the gift's recipient (the occasion's recipient).
 - A gift group has exactly one member with role `owner`.
+- An occasion's recipient profile and everyone invited must be friends of the creator; never invite the
+  creator or the recipient.
+- Past occasions can't be changed (occasion PUT, gift POST/PUT/DELETE, gift groups, invites); DELETE of the
+  occasion itself is allowed.
 
 ### Foreign key delete behaviour (suggested – confirm with us)
 

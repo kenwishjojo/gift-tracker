@@ -2,15 +2,18 @@
   <a [routerLink]="['/occasion', occasion.id]">Back to {{ occasion.name }}</a>
 
   <h1>{{ gift.id === 0 ? 'Add gift idea' : 'Edit gift' }}</h1>
-  <p>{{ occasion.name }}, for {{ recipient?.fullName }}</p>
+  <p>{{ occasion.name }}, for {{ recipientName() }}</p>
 
-  @if (isForMe()) {
-    <!-- Your own occasion: no form and no gift details, so the surprise isn't spoiled -->
-    <p class="os-info">This occasion is for you, so the gifts are a surprise. Your friends and family plan them here.</p>
+  @if (!mayView()) {
+    <!-- Not invited, or the occasion is for you: no form and no gift details, so the surprise isn't spoiled -->
+    <p class="os-info">You aren't invited to this occasion.</p>
+  } @else if (isLocked()) {
+    <!-- A past occasion's gifts are read only (the API refuses changes too) -->
+    <p class="os-info locked"><mat-icon aria-hidden="true">lock</mat-icon> This occasion has passed, so its gifts can't be changed any more.</p>
   } @else {
     <!-- #giftForm="ngForm" is a template reference variable for the whole form, so we can check
          giftForm.invalid. Each field gets its own, e.g. #nameField="ngModel" (Lecture 7). -->
-    <form #giftForm="ngForm" (ngSubmit)="saveGift()" class="os-card os-stack form">
+    <form #giftForm="ngForm" (ngSubmit)="onSubmit()" class="os-card os-stack form">
       <!-- Name: required. Errors only show after the user has typed in or left the field
            (dirty || touched = "progressive enhancement", Lecture 7), not as soon as the page opens. -->
       <div class="os-field" [class.os-field--error]="nameField.invalid && (nameField.dirty || nameField.touched)">
@@ -110,6 +113,16 @@
         <span class="os-meta">Fix the fields marked above to save the gift.</span>
       }
     </form>
+
+    <!-- Warning box before saving changes to an existing gift -->
+    @if (showSaveConfirm) {
+      <app-confirm-dialog
+        title="Save the changes?"
+        [message]="'Everyone who can see ' + occasion.name + ' will see the changes to ' + gift.name + ', and friends you untick no longer split it.'"
+        confirmLabel="Save changes"
+        (confirmed)="saveGift()"
+        (cancelled)="showSaveConfirm = false" />
+    }
   }
 } @else {
   <p>Loading…</p>

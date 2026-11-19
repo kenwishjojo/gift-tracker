@@ -1,81 +1,132 @@
 @if (occasion) {
   <a [routerLink]="cancelLink()">Back</a>
 
-  <h1>{{ occasion.id === 0 ? 'Add occasion' : 'Edit occasion' }}</h1>
+  <h1>{{ isNew() ? 'Add occasion' : 'Edit occasion' }}</h1>
 
-  <!-- #occasionForm="ngForm" is a template reference variable for the whole form, so we can check
-       occasionForm.invalid. Each field gets its own, e.g. #nameField="ngModel" (Lecture 7). -->
-  <form #occasionForm="ngForm" (ngSubmit)="saveOccasion()" class="os-card os-stack form">
-    <!-- Who is it for: required. [ngValue] keeps the id a number (a plain value="" would make it text). -->
-    <div class="os-field" [class.os-field--error]="recipientField.touched && occasion.recipientId === 0">
-      <label for="recipient">Who is it for?</label>
-      <select id="recipient" name="recipient" [(ngModel)]="occasion.recipientId" #recipientField="ngModel">
-        <option [ngValue]="0" disabled>Choose a person</option>
-        @for (profile of profiles; track profile.id) {
-          <option [ngValue]="profile.id">{{ profile.fullName }}</option>
+  @if (!isNew() && !isCreator()) {
+    <!-- Only the person who made the occasion can change it -->
+    <p class="os-info">Only the person who made this occasion can change it.</p>
+  } @else if (isLocked()) {
+    <!-- A past occasion is read only (the API refuses changes too) -->
+    <p class="os-info locked"><mat-icon aria-hidden="true">lock</mat-icon> This occasion has passed, so it can't be changed any more.</p>
+  } @else {
+    <!-- #occasionForm="ngForm" is a template reference variable for the whole form, so we can check
+         occasionForm.invalid. Each field gets its own, e.g. #nameField="ngModel" (Lecture 7). -->
+    <form #occasionForm="ngForm" (ngSubmit)="onSubmit()" class="os-card os-stack form">
+      <!-- Who is it for: one of your friends, or someone without an account (then type their name).
+           [ngValue] keeps a friend's id a number (a plain value="" would make it text). -->
+      <div class="os-field" [class.os-field--error]="recipientField.touched && noRecipient()">
+        <label for="recipient">Who is it for?</label>
+        <select id="recipient" name="recipient" [(ngModel)]="recipientChoice" #recipientField="ngModel"
+                (ngModelChange)="onRecipientChange()">
+          <option [ngValue]="0" disabled>Choose a friend</option>
+          @for (profile of recipientOptions(); track profile.id) {
+            <option [ngValue]="profile.id">{{ profile.fullName }}</option>
+          }
+          <option [ngValue]="'other'">Someone without an account</option>
+        </select>
+        @if (recipientField.touched && noRecipient()) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose who the occasion is for</span>
+        } @else {
+          <span class="os-field__help">Only your friends are listed. Add friends on the Friends page.</span>
         }
-      </select>
-      @if (recipientField.touched && occasion.recipientId === 0) {
-        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose who the occasion is for</span>
-      }
-    </div>
+      </div>
 
-    <!-- Name: required. Errors only show after the user has typed in or left the field
-         (dirty || touched = "progressive enhancement", Lecture 7). -->
-    <div class="os-field" [class.os-field--error]="nameField.invalid && (nameField.dirty || nameField.touched)">
-      <label for="name">Name of the occasion</label>
-      <input id="name" name="name" type="text" [(ngModel)]="occasion.name" #nameField="ngModel" required />
-      @if (nameField.invalid && (nameField.dirty || nameField.touched)) {
-        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Oops, the occasion needs a name, e.g. Anna's birthday</span>
-      } @else {
-        <span class="os-field__help">For example "Anna's birthday" or "Christmas 2026"</span>
+      <!-- Their name: only shown (and only required) when the person has no account -->
+      @if (recipientChoice === 'other') {
+        <div class="os-field" [class.os-field--error]="otherNameField.invalid && (otherNameField.dirty || otherNameField.touched)">
+          <label for="otherName">Their name</label>
+          <input id="otherName" name="otherName" type="text" [(ngModel)]="otherName" #otherNameField="ngModel" required />
+          @if (otherNameField.invalid && (otherNameField.dirty || otherNameField.touched)) {
+            <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please type their name, e.g. Mormor</span>
+          }
+        </div>
       }
-    </div>
 
-    <!-- Date: required. type="date" gives a date picker, and its value is text like "2026-12-03" –
-         the same format the API uses for eventDate. -->
-    <div class="os-field" [class.os-field--error]="dateField.invalid && (dateField.dirty || dateField.touched)">
-      <label for="eventDate">Date</label>
-      <input id="eventDate" name="eventDate" type="date" [(ngModel)]="occasion.eventDate" #dateField="ngModel" required />
-      @if (dateField.invalid && (dateField.dirty || dateField.touched)) {
-        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose the date</span>
-      }
-    </div>
-
-    <!-- Type: required, one of the values the database allows (chk_occasion_type) -->
-    <div class="os-field" [class.os-field--error]="typeField.invalid && (typeField.dirty || typeField.touched)">
-      <label for="type">Type</label>
-      <select id="type" name="type" [(ngModel)]="occasion.type" #typeField="ngModel" required>
-        @for (type of types; track type) {
-          <option [value]="type">{{ type | titlecase }}</option>
+      <!-- Name: required. Errors only show after the user has typed in or left the field
+           (dirty || touched = "progressive enhancement", Lecture 7). -->
+      <div class="os-field" [class.os-field--error]="nameField.invalid && (nameField.dirty || nameField.touched)">
+        <label for="name">Name of the occasion</label>
+        <input id="name" name="name" type="text" [(ngModel)]="occasion.name" #nameField="ngModel" required />
+        @if (nameField.invalid && (nameField.dirty || nameField.touched)) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Oops, the occasion needs a name, e.g. Anna's birthday</span>
+        } @else {
+          <span class="os-field__help">For example "Anna's birthday" or "Christmas 2026"</span>
         }
-      </select>
-      @if (typeField.invalid && (typeField.dirty || typeField.touched)) {
-        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose a type</span>
+      </div>
+
+      <!-- Date: required, and today or later (checked in dateInPast()). type="date" gives a date picker,
+           and its value is text like "2026-12-03" – the same format the API uses for eventDate. -->
+      <div class="os-field" [class.os-field--error]="(dateField.invalid && (dateField.dirty || dateField.touched)) || dateInPast()">
+        <label for="eventDate">Date</label>
+        <input id="eventDate" name="eventDate" type="date" [(ngModel)]="occasion.eventDate" #dateField="ngModel" required />
+        @if (dateInPast()) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> The date has already passed – choose today or later</span>
+        } @else if (dateField.invalid && (dateField.dirty || dateField.touched)) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose the date</span>
+        }
+      </div>
+
+      <!-- Type: required, one of the values the database allows (chk_occasion_type) -->
+      <div class="os-field" [class.os-field--error]="typeField.invalid && (typeField.dirty || typeField.touched)">
+        <label for="type">Type</label>
+        <select id="type" name="type" [(ngModel)]="occasion.type" #typeField="ngModel" required>
+          @for (type of types; track type) {
+            <option [value]="type">{{ type | titlecase }}</option>
+          }
+        </select>
+        @if (typeField.invalid && (typeField.dirty || typeField.touched)) {
+          <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose a type</span>
+        }
+      </div>
+
+      <div class="os-field">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" [(ngModel)]="occasion.notes"></textarea>
+        <span class="os-field__help">Optional, e.g. "Dinner at her place on Friday"</span>
+      </div>
+
+      <!-- Invite friends: one checkbox per friend. These aren't ngModel fields: (change) calls toggleInvite,
+           which keeps selectedInviteIds up to date. The person the occasion is for is never listed. -->
+      <fieldset class="os-field invites">
+        <legend>Invite friends</legend>
+        <span class="os-field__help">Only you and the friends you invite can see this occasion and plan gifts.</span>
+        @for (friend of inviteOptions(); track friend.id) {
+          <label class="friend">
+            <input type="checkbox" [checked]="isInvited(friend.id)" (change)="toggleInvite(friend.id)" />
+            {{ friend.fullName }}
+          </label>
+        } @empty {
+          <span class="os-field__help">You have no friends to invite yet. <a routerLink="/friends">Add friends</a> first.</span>
+        }
+      </fieldset>
+
+      @if (errorMessage) {
+        <p class="os-error"><mat-icon aria-hidden="true">error</mat-icon> {{ errorMessage }}</p>
       }
-    </div>
 
-    <div class="os-field">
-      <label for="notes">Notes</label>
-      <textarea id="notes" name="notes" [(ngModel)]="occasion.notes"></textarea>
-      <span class="os-field__help">Optional, e.g. "Dinner at her place on Friday"</span>
-    </div>
+      <div class="os-row">
+        <!-- The one blue (primary) button on this screen. Disabled while any rule is broken
+             ("disable submit when invalid", Lecture 7). -->
+        <button type="submit" class="os-btn os-btn--primary"
+                [disabled]="occasionForm.invalid || noRecipient() || dateInPast()">Save occasion</button>
+        <a class="os-btn" [routerLink]="cancelLink()">Cancel</a>
+      </div>
+      @if (occasionForm.invalid || noRecipient() || dateInPast()) {
+        <span class="os-meta">Fill in the fields above to save the occasion.</span>
+      }
+    </form>
 
-    @if (errorMessage) {
-      <p class="os-error"><mat-icon aria-hidden="true">error</mat-icon> {{ errorMessage }}</p>
+    <!-- Warning box before saving changes to an existing occasion -->
+    @if (showSaveConfirm) {
+      <app-confirm-dialog
+        title="Save the changes?"
+        [message]="'Everyone invited to ' + occasion.name + ' will see the changes, and friends you untick will no longer see it.'"
+        confirmLabel="Save changes"
+        (confirmed)="saveOccasion()"
+        (cancelled)="showSaveConfirm = false" />
     }
-
-    <div class="os-row">
-      <!-- The one blue (primary) button on this screen. Disabled while the form is invalid or nobody
-           is chosen ("disable submit when invalid", Lecture 7). -->
-      <button type="submit" class="os-btn os-btn--primary"
-              [disabled]="occasionForm.invalid || occasion.recipientId === 0">Save occasion</button>
-      <a class="os-btn" [routerLink]="cancelLink()">Cancel</a>
-    </div>
-    @if (occasionForm.invalid || occasion.recipientId === 0) {
-      <span class="os-meta">Fill in the fields above to save the occasion.</span>
-    }
-  </form>
+  }
 } @else {
   <p>Loading…</p>
 }

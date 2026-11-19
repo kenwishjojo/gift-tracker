@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 // The first page: log in with email and password, then go to the home page
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })

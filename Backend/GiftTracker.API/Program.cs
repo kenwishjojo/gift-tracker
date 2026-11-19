@@ -17,6 +17,7 @@ builder.Services.AddScoped<OccasionRepository, OccasionRepository>();
 builder.Services.AddScoped<GiftRepository, GiftRepository>();
 builder.Services.AddScoped<GiftGroupRepository, GiftGroupRepository>();
 builder.Services.AddScoped<GroupMemberRepository, GroupMemberRepository>();
+builder.Services.AddScoped<OccasionInviteRepository, OccasionInviteRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

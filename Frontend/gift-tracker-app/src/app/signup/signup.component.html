@@ -1,0 +1,82 @@
+<div class="signup os-card">
+  <h1>Create an account</h1>
+  <p>Plan gifts with your friends and family.</p>
+
+  <!-- #signupForm="ngForm" lets us check if the whole form is valid. Each field also gets its own
+       template reference variable, e.g. #nameField="ngModel", to show its error (Lecture 7). -->
+  <form #signupForm="ngForm" (ngSubmit)="signUp()" class="os-stack">
+    <!-- Name: required -->
+    <div class="os-field" [class.os-field--error]="nameField.invalid && nameField.touched">
+      <label for="fullName">Full name</label>
+      <input id="fullName" name="fullName" type="text" autocomplete="name"
+             [(ngModel)]="fullName" #nameField="ngModel" required />
+      @if (nameField.invalid && nameField.touched) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please enter your name, e.g. Anna Jensen</span>
+      }
+    </div>
+
+    <!-- Email: required and a valid email (format validation) -->
+    <div class="os-field" [class.os-field--error]="emailField.invalid && emailField.touched">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email"
+             [(ngModel)]="email" #emailField="ngModel" required email />
+      @if (emailField.invalid && emailField.touched) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please enter your email, e.g. anna.jensen&#64;example.com</span>
+      }
+    </div>
+
+    <!-- Birthday: required, and not in the future (checked in birthdayInFuture()) -->
+    <div class="os-field" [class.os-field--error]="(dateField.invalid && dateField.touched) || birthdayInFuture()">
+      <label for="dateOfBirth">Birthday</label>
+      <input id="dateOfBirth" name="dateOfBirth" type="date"
+             [(ngModel)]="dateOfBirth" #dateField="ngModel" required />
+      @if (birthdayInFuture()) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Your birthday can't be in the future</span>
+      } @else if (dateField.invalid && dateField.touched) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose your birthday</span>
+      } @else {
+        <span class="os-field__help">Your friends see it, so they can plan your birthday</span>
+      }
+    </div>
+
+    <!-- Password: required and at least 8 characters (range validation – the API checks the same) -->
+    <div class="os-field" [class.os-field--error]="passwordField.invalid && passwordField.touched">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="new-password"
+             [(ngModel)]="password" #passwordField="ngModel" required minlength="8" />
+      @if (passwordField.errors?.['minlength'] && passwordField.touched) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> The password needs at least 8 characters</span>
+      } @else if (passwordField.invalid && passwordField.touched) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> Please choose a password</span>
+      } @else {
+        <span class="os-field__help">At least 8 characters</span>
+      }
+    </div>
+
+    <!-- Repeat password: must be the same as the first one (cross-field validation, Lecture 7) -->
+    <div class="os-field" [class.os-field--error]="passwordsDiffer()">
+      <label for="repeatPassword">Repeat password</label>
+      <input id="repeatPassword" name="repeatPassword" type="password" autocomplete="new-password"
+             [(ngModel)]="repeatPassword" required />
+      @if (passwordsDiffer()) {
+        <span class="os-error"><mat-icon aria-hidden="true">error</mat-icon> The two passwords aren't the same</span>
+      }
+    </div>
+
+    <!-- Terms: the box must be ticked. On a checkbox, "required" means "must be ticked". -->
+    <label class="terms">
+      <input type="checkbox" name="acceptTerms" [(ngModel)]="acceptTerms" required />
+      I accept the <a routerLink="/terms" target="_blank">terms and conditions</a>
+    </label>
+
+    @if (errorMessage) {
+      <p class="os-error"><mat-icon aria-hidden="true">error</mat-icon> {{ errorMessage }}</p>
+    }
+
+    <!-- The one blue button. Disabled while any rule is broken ("disable submit when invalid", Lecture 7) -->
+    <button type="submit" class="os-btn os-btn--primary"
+            [disabled]="signupForm.invalid || passwordsDiffer() || birthdayInFuture()">Create account</button>
+  </form>
+
+  <p>Already have an account? <a routerLink="/login">Log in</a></p>
+</div>

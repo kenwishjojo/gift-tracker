@@ -3,8 +3,7 @@ import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { Occasion } from '../model/occasion';
-import { Profile } from '../model/profile';
-import { Gift, totalPrice, totalShareFor } from '../model/gift';
+import { Gift, totalShareFor } from '../model/gift';
 import { AvatarComponent } from '../avatar/avatar.component';
 
 // One occasion as a card (.os-occ from the brand book): who, what, when, and gift status.
@@ -19,16 +18,12 @@ export class OccasionCardComponent {
   // @Input: the parent page passes the data in, like [student] into StudentCard in Lecture 6.
   // The ! tells TypeScript the value will be set by the parent before it is used.
   @Input() occasion!: Occasion;
-  @Input() recipient?: Profile; // the person who gets the gifts
+  @Input() recipientName = ''; // who gets the gifts: a profile's name, or a typed name if they have no account
   @Input() gifts: Gift[] = []; // the gifts for this occasion
   @Input() meId = 0; // the logged-in user's id, for "Your share"
   @Input() splitGiftIds: number[] = []; // the gifts a friend splits with the logged-in user
 
-  // Same calculations as on the occasion page (shared functions in model/gift.ts)
-  total(): number {
-    return totalPrice(this.gifts);
-  }
-
+  // Same calculation as on the occasion page (shared function in model/gift.ts)
   myShare(): number {
     return totalShareFor(this.gifts, this.meId, this.splitGiftIds);
   }
@@ -51,11 +46,6 @@ export class OccasionCardComponent {
     return 'has passed';
   }
 
-  // True when the logged-in user is the one getting the gifts. Then the card hides all gift info.
-  isForMe(): boolean {
-    return this.meId > 0 && this.occasion.recipientId === this.meId;
-  }
-
   // A gift counts as done when it is bought or already given
   hasBoughtGift(): boolean {
     return this.gifts.some((g) => g.status === 'bought' || g.status === 'given');
@@ -64,6 +54,6 @@ export class OccasionCardComponent {
   // Brand book: blue border and blue badge only when the occasion is close (30 days) and has no gift
   isSoonWithoutGift(): boolean {
     const days = this.daysLeft();
-    return !this.isForMe() && days >= 0 && days <= 30 && this.gifts.length === 0;
+    return days >= 0 && days <= 30 && this.gifts.length === 0;
   }
 }

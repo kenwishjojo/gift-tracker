@@ -33,7 +33,7 @@
         <span class="os-title name">{{ otherPerson(c)?.fullName }}</span>
         <div class="os-row">
           <button type="button" class="os-btn" (click)="accept(c)">Accept</button>
-          <button type="button" class="os-btn" (click)="remove(c, 'Decline the friend request from ' + otherPerson(c)?.fullName + '?')">Decline</button>
+          <button type="button" class="os-btn" (click)="askToRemove(c, 'Decline the friend request?', 'The request from ' + otherPerson(c)?.fullName + ' will be deleted. They can send a new one later.')">Decline</button>
         </div>
       </div>
     }
@@ -46,7 +46,7 @@
     <div class="os-card person">
       <app-avatar [name]="otherPerson(c)?.fullName ?? ''" />
       <a class="os-title name" [routerLink]="['/profile', otherPerson(c)?.id]">{{ otherPerson(c)?.fullName }}</a>
-      <button type="button" class="os-btn" (click)="remove(c, 'Remove ' + otherPerson(c)?.fullName + ' as a friend?')">Remove</button>
+      <button type="button" class="os-btn" (click)="askToRemove(c, 'Remove this friend?', otherPerson(c)?.fullName + ' will no longer be your friend. They stay on occasions and splits you already share with them.')">Remove</button>
     </div>
   } @empty {
     <p>No friends yet. Send a request above to get started.</p>
@@ -63,8 +63,18 @@
           <span class="os-title">{{ otherPerson(c)?.fullName }}</span><br />
           <span class="os-meta">Waiting for an answer</span>
         </span>
-        <button type="button" class="os-btn" (click)="remove(c, 'Cancel your request to ' + otherPerson(c)?.fullName + '?')">Cancel</button>
+        <button type="button" class="os-btn" (click)="askToRemove(c, 'Cancel your friend request?', 'Your request to ' + otherPerson(c)?.fullName + ' will be deleted.')">Cancel</button>
       </div>
     }
   </div>
+}
+
+<!-- The warning box for Decline, Remove and Cancel (all three delete the connection) -->
+@if (toRemove) {
+  <app-confirm-dialog
+    [title]="removeTitle"
+    [message]="removeMessage"
+    confirmLabel="Yes, delete it"
+    (confirmed)="remove()"
+    (cancelled)="toRemove = undefined" />
 }

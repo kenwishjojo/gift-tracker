@@ -14,7 +14,7 @@
       <a class="os-card os-stack feed-item" [routerLink]="['/occasion', gift.occasionId]">
         <span class="os-title">{{ gift.name }}</span>
         <span>
-          {{ occasionOf(gift)?.name }} for {{ nameOf(occasionOf(gift)?.recipientId) }},
+          {{ occasionOf(gift)?.name }} for {{ recipientName(gift) }},
           {{ occasionOf(gift)?.eventDate | date: 'd MMM y' }}
         </span>
         <span class="os-meta">With {{ splitWith(gift) }}</span>

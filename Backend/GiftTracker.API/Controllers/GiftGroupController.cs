@@ -69,7 +69,13 @@ public class GiftGroupController : ControllerBase
         }
         // Rule: the person the gift is for can't help pay for it (same idea as "buyer can't be the recipient")
         Occasion? occasion = OccasionRepository.GetOccasionById(gift.OccasionId);
-        if (occasion != null && g.MemberIds.Contains(occasion.RecipientId))
+        // Rule: a past occasion is locked, including who splits its gifts
+        if (occasion != null && occasion.IsPast())
+        {
+            return BadRequest("This occasion has passed, so its gifts can't be changed any more");
+        }
+        // (RecipientId is null when the occasion is for someone without an account – nothing to check)
+        if (occasion != null && occasion.RecipientId != null && g.MemberIds.Contains(occasion.RecipientId.Value))
         {
             return BadRequest("The person the gift is for can't split it");
         }
@@ -104,6 +110,13 @@ public class GiftGroupController : ControllerBase
         if (existing == null)
         {
             return NotFound($"Gift group with id {id} not found");
+        }
+        // Rule: a past occasion is locked, including who splits its gifts
+        Gift? gift = GiftRepository.GetGiftById(existing.GiftId);
+        Occasion? occasion = gift == null ? null : OccasionRepository.GetOccasionById(gift.OccasionId);
+        if (occasion != null && occasion.IsPast())
+        {
+            return BadRequest("This occasion has passed, so its gifts can't be changed any more");
         }
         bool status = Repository.DeleteGiftGroup(id);
         if (status)

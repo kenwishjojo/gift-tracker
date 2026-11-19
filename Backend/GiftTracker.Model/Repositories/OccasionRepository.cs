@@ -63,12 +63,14 @@ public class OccasionRepository : BaseRepository
             var cmd = dbConn.CreateCommand();
             cmd.CommandText = @"
                 insert into occasion
-                (createdbyid, recipientid, name, eventdate, type, notes)
+                (createdbyid, recipientid, recipientname, name, eventdate, type, notes)
                 values
-                (@createdbyid, @recipientid, @name, @eventdate, @type, @notes)
+                (@createdbyid, @recipientid, @recipientname, @name, @eventdate, @type, @notes)
                 returning id";
             cmd.Parameters.AddWithValue("@createdbyid", NpgsqlDbType.Integer, o.CreatedById);
-            cmd.Parameters.AddWithValue("@recipientid", NpgsqlDbType.Integer, o.RecipientId);
+            // Only one of these two is set; the other is sent as NULL (DbValue in BaseRepository)
+            cmd.Parameters.AddWithValue("@recipientid", NpgsqlDbType.Integer, DbValue(o.RecipientId));
+            cmd.Parameters.AddWithValue("@recipientname", NpgsqlDbType.Text, DbValue(o.RecipientName));
             cmd.Parameters.AddWithValue("@name", NpgsqlDbType.Text, o.Name);
             cmd.Parameters.AddWithValue("@eventdate", NpgsqlDbType.Date, o.EventDate);
             cmd.Parameters.AddWithValue("@type", NpgsqlDbType.Text, o.Type);
@@ -92,13 +94,16 @@ public class OccasionRepository : BaseRepository
                 update occasion set
                 createdbyid = @createdbyid,
                 recipientid = @recipientid,
+                recipientname = @recipientname,
                 name = @name,
                 eventdate = @eventdate,
                 type = @type,
                 notes = @notes
                 where id = @id";
             cmd.Parameters.AddWithValue("@createdbyid", NpgsqlDbType.Integer, o.CreatedById);
-            cmd.Parameters.AddWithValue("@recipientid", NpgsqlDbType.Integer, o.RecipientId);
+            // Only one of these two is set; the other is sent as NULL (DbValue in BaseRepository)
+            cmd.Parameters.AddWithValue("@recipientid", NpgsqlDbType.Integer, DbValue(o.RecipientId));
+            cmd.Parameters.AddWithValue("@recipientname", NpgsqlDbType.Text, DbValue(o.RecipientName));
             cmd.Parameters.AddWithValue("@name", NpgsqlDbType.Text, o.Name);
             cmd.Parameters.AddWithValue("@eventdate", NpgsqlDbType.Date, o.EventDate);
             cmd.Parameters.AddWithValue("@type", NpgsqlDbType.Text, o.Type);
@@ -136,7 +141,8 @@ public class OccasionRepository : BaseRepository
         return new Occasion(Convert.ToInt32(data["id"]))
         {
             CreatedById = Convert.ToInt32(data["createdbyid"]),
-            RecipientId = Convert.ToInt32(data["recipientid"]),
+            RecipientId = ReadNullableInt(data, "recipientid"),
+            RecipientName = ReadNullableString(data, "recipientname"),
             Name = Convert.ToString(data["name"])!,
             EventDate = ReadDate(data, "eventdate"),
             Type = Convert.ToString(data["type"])!,

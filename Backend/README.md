@@ -74,6 +74,17 @@ These rules can't be written as simple database checks, so the controllers check
   - `/api/GroupMember` won't add a second owner, won't turn the owner into a viewer or move them to another
     group, and won't delete the owner (delete the gift group instead). Changing who the owner is isn't
     supported yet.
+- **Occasions** (`/api/Occasion`):
+  - The recipient is a profile (`recipientId`) **or** just a name (`recipientName`) for someone without an
+    account – exactly one of the two (the database checks it with `chk_occasion_recipient`).
+  - A recipient profile must be a **friend** of the creator, and you can't make an occasion for yourself.
+  - **Past occasions are locked**: `PUT` is refused once `eventDate` has passed. `DELETE` still works.
+- **Gifts and split groups**: no `POST`, `PUT` or `DELETE` on a gift (or its gift group) when its occasion
+  has passed.
+- **Invites** (`/api/OccasionInvite`): GET all, GET `{id}`, POST, DELETE `{id}`, and
+  `PUT /api/OccasionInvite/occasion/{occasionId}` with a list of profile ids (e.g. `[3, 6]`) that **replaces**
+  the occasion's whole invite list in one transaction. There is no plain PUT – an invite has nothing to change.
+  Only the creator's friends can be invited, never the creator or the recipient, and not on a past occasion.
 - **Friend requests** (`/api/Connection`):
   - `POST` only accepts `status: "pending"` – a friendship always starts as a request.
   - `PUT` can't change who the two people are, and an accepted friendship can't go back to pending.
@@ -91,7 +102,10 @@ These rules can't be written as simple database checks, so the controllers check
   All test profiles have the password `GaveListe2026`.
 - **Dates**: `dateOfBirth` and `eventDate` are `DateOnly` – send them as `"2026-12-03"`.
   `createdAt` and `joinedAt` are set by the database (default `now()`), so you don't send them.
-- **Optional (NULL) columns** are nullable in C# (`string?`, `decimal?`), e.g. `notes`, `description`, `price`, `link`.
+- **Optional (NULL) columns** are nullable in C# (`string?`, `decimal?`, `int?`), e.g. `notes`, `description`,
+  `price`, `link`, `recipientId`, `recipientName`.
+- **Who sees what** (creator and invited friends only, never the recipient) is decided in the frontend: the API
+  has no login tokens, so `GET /api/Occasion` still returns every occasion (e.g. in Swagger).
 - **Splitting a gift**: `splitCount` is how many people share the price (1 = not split; leave it out and it is 1).
   When the gift is split with friends, it equals the number of members in the gift's `gift_group`.
   The database checks it is at least 1. Each person's share is `price / splitCount`, calculated by the frontend
@@ -100,7 +114,7 @@ These rules can't be written as simple database checks, so the controllers check
   a friend request to yourself or a second request between the same two people, a status/type/role that isn't in
   the list, a negative price, a second group for the same gift, a wrong foreign key...), the API answers 400 with
   the rule's name instead of crashing. See the middleware in `Program.cs`.
-- **Deleting cascades** (set in the database): deleting a profile also deletes their connections, occasions,
-  gifts and group memberships; deleting an occasion deletes its gifts; deleting a gift deletes its gift group;
+- **Deleting cascades** (set in the database): deleting a profile also deletes their connections, invites,
+  occasions, gifts and group memberships; deleting an occasion also deletes its invites; deleting an occasion deletes its gifts; deleting a gift deletes its gift group;
   deleting a gift group deletes its members.
 - **CORS** is open so the Angular app on port 4200 can call the API.

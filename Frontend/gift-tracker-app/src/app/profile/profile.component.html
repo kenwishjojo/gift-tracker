@@ -11,14 +11,38 @@
     </div>
   </div>
 
-  <h2>Occasions for {{ profile.fullName.split(' ')[0] }}</h2>
-  <div class="os-stack">
-    @for (occasion of occasions; track occasion.id) {
-      <app-occasion-card [occasion]="occasion" [recipient]="profile" [gifts]="giftsFor(occasion)" [meId]="meId" [splitGiftIds]="mySplitGiftIds()" />
-    } @empty {
-      <p>No occasions for {{ profile.fullName.split(' ')[0] }} yet.</p>
-    }
-  </div>
+  @if (isMyProfile()) {
+    <!-- Your own profile: your occasions are a surprise, so they aren't listed here -->
+    <h2>Your account</h2>
+    <div class="os-card os-stack account">
+      <a routerLink="/terms">Terms and conditions</a>
+      <!-- A secondary button: deleting must never be the "main" action on a screen -->
+      <div>
+        <button type="button" class="os-btn" (click)="showDeleteConfirm = true">Delete my account</button>
+      </div>
+    </div>
+  } @else {
+    <h2>Occasions for {{ profile.fullName.split(' ')[0] }}</h2>
+    <div class="os-stack">
+      @for (occasion of forThisPerson(); track occasion.id) {
+        <app-occasion-card [occasion]="occasion" [recipientName]="profile.fullName" [gifts]="giftsFor(occasion)"
+                           [meId]="meId" [splitGiftIds]="mySplitGiftIds()" />
+      } @empty {
+        <p>No occasions for {{ profile.fullName.split(' ')[0] }} that you're invited to.</p>
+      }
+    </div>
+  }
+
+  <!-- Warning box before deleting the account. The list shows what the database deletes with it. -->
+  @if (showDeleteConfirm) {
+    <app-confirm-dialog
+      title="Delete your account?"
+      message="Your account is deleted for good and can't be brought back. This also deletes:"
+      [details]="deleteDetails()"
+      confirmLabel="Delete my account"
+      (confirmed)="deleteAccount()"
+      (cancelled)="showDeleteConfirm = false" />
+  }
 } @else {
   <p>Loading…</p>
 }

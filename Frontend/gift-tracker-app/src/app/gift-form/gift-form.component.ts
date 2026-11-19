@@ -5,7 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe, TitleCasePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Gift, GIFT_STATUSES, shareOf } from '../model/gift';
-import { Occasion } from '../model/occasion';
+import { Occasion, OccasionInvite, canSee, isPast, recipientNameOf } from '../model/occasion';
 import { Profile } from '../model/profile';
 import { Connection } from '../model/connection';
 import { GiftGroup, GroupMember } from '../model/gift-group';
@@ -15,13 +15,15 @@ import { ProfileService } from '../services/profile.service';
 import { AuthService } from '../services/auth.service';
 import { ConnectionService } from '../services/connection.service';
 import { GiftGroupService } from '../services/gift-group.service';
+import { InviteService } from '../services/invite.service';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 // Page: add a new gift (/occasion/3/gift/new) or edit one (/gift/5/edit).
 // Template-driven form: the fields are two-way bound to this.gift with [(ngModel)],
 // and the validation rules (required, min) are written in the HTML (Lecture 7).
 @Component({
   selector: 'app-gift-form',
-  imports: [FormsModule, RouterLink, DecimalPipe, TitleCasePipe, MatIconModule],
+  imports: [FormsModule, RouterLink, DecimalPipe, TitleCasePipe, MatIconModule, ConfirmDialogComponent],
   templateUrl: './gift-form.component.html',
   styleUrl: './gift-form.component.css',
 })
@@ -32,7 +34,8 @@ export class GiftFormComponent implements OnInit {
 
   gift?: Gift;
   occasion?: Occasion;
-  recipient?: Profile;
+  invites: OccasionInvite[] = []; // who may see the occasion (and so who you can split with)
+  showSaveConfirm = false; // the warning box before saving changes to an existing gift
   statuses = GIFT_STATUSES; // the options in the status list
   me: Profile | null = null; // the logged-in user
   errorMessage = '';
@@ -56,6 +59,7 @@ export class GiftFormComponent implements OnInit {
     private authService: AuthService,
     private connectionService: ConnectionService,
     private giftGroupService: GiftGroupService,
+    private inviteService: InviteService,
     private router: Router,
   ) {}
 
@@ -64,6 +68,7 @@ export class GiftFormComponent implements OnInit {
     this.me = this.authService.getProfile();
     this.profileService.getProfiles().subscribe((data) => (this.profiles = data));
     this.connectionService.getConnections().subscribe((data) => (this.connections = data));
+    this.inviteService.getInvites().subscribe((data) => (this.invites = data));
     if (this.id) {
       // Edit: load the gift, then its occasion.
       // getGift returns an Observable; the code in subscribe runs when the API answers (Lecture 6)
@@ -91,12 +96,14 @@ export class GiftFormComponent implements OnInit {
     }
   }
 
-  // The occasion and its recipient are shown at the top of the form
+  // The occasion is shown at the top of the form (its recipient's name comes from recipientName())
   loadOccasion(occasionId: number): void {
-    this.occasionService.getOccasion(occasionId).subscribe((occasion) => {
-      this.occasion = occasion;
-      this.profileService.getProfile(occasion.recipientId).subscribe((p) => (this.recipient = p));
-    });
+    this.occasionService.getOccasion(occasionId).subscribe((occasion) => (this.occasion = occasion));
+  }
+
+  // The person the occasion is for: a profile's name, or a typed name if they have no account
+  recipientName(): string {
+    return this.occasion ? recipientNameOf(this.occasion, this.profiles) : '';
   }
 
   // Edit: find the gift's group and tick the friends who are already in it.
@@ -115,7 +122,8 @@ export class GiftFormComponent implements OnInit {
     });
   }
 
-  // The people you can split with: your accepted friends, plus anyone already in the group.
+  // The people you can split with: your accepted friends who can see the occasion (its creator or
+  // invited friends – so the gift appears on a page they can open), plus anyone already in the group.
   // Never the buyer (they pay already) and never the person the gift is for (it's their present).
   friendOptions(): Profile[] {
     if (!this.me || !this.gift || !this.occasion) {
@@ -129,7 +137,8 @@ export class GiftFormComponent implements OnInit {
     const recipientId = this.occasion.recipientId;
     return this.profiles.filter(
       (p) =>
-        (friendIds.includes(p.id) || this.selectedFriendIds.includes(p.id)) &&
+        ((friendIds.includes(p.id) && canSee(this.occasion!, p.id, this.invites)) ||
+          this.selectedFriendIds.includes(p.id)) &&
         p.id !== buyerId &&
         p.id !== recipientId,
     );
@@ -157,11 +166,15 @@ export class GiftFormComponent implements OnInit {
     return this.isSplit && this.selectedFriendIds.length === 0;
   }
 
-  // True when the logged-in user is the occasion's recipient. Then the form is hidden:
-  // you can't add gifts to your own birthday (the API checks that too: buyer can't be the recipient),
-  // and opening /gift/5/edit for a gift on your own occasion mustn't reveal the surprise either.
-  isForMe(): boolean {
-    return !!this.me && !!this.occasion && this.occasion.recipientId === this.me.id;
+  // The form is only shown to people who may see the occasion: its creator and invited friends,
+  // never the person it is for (opening /gift/5/edit mustn't spoil the surprise either).
+  mayView(): boolean {
+    return !!this.me && !!this.occasion && canSee(this.occasion, this.me.id, this.invites);
+  }
+
+  // A past occasion's gifts are locked (the API refuses changes too)
+  isLocked(): boolean {
+    return !!this.occasion && isPast(this.occasion);
   }
 
   // Ticking or unticking "Split the price": the number of people follows the chosen friends
@@ -176,10 +189,21 @@ export class GiftFormComponent implements OnInit {
     return this.gift ? shareOf(this.gift) : null;
   }
 
+  // The form's Save button. A new gift is saved straight away; changes to an existing gift are saved
+  // only after the user says yes in the warning box.
+  onSubmit(): void {
+    if (this.gift && this.gift.id === 0) {
+      this.saveGift();
+    } else {
+      this.showSaveConfirm = true;
+    }
+  }
+
   saveGift(): void {
     if (!this.gift) {
       return;
     }
+    this.showSaveConfirm = false;
     this.errorMessage = '';
     if (!this.isSplit) {
       this.gift.splitCount = 1; // not split: one person pays it all

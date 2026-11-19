@@ -1,0 +1,25 @@
+<!-- A dark backdrop over the page, with the box in the middle. role="alertdialog" tells screen readers
+     that this is a question that needs an answer. Clicking the backdrop counts as "Cancel". -->
+<div class="backdrop" (click)="cancel()">
+  <!-- $event.stopPropagation(): a click inside the box must not also count as a click on the backdrop -->
+  <div class="box os-stack" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title"
+       (click)="$event.stopPropagation()">
+    <h2 id="confirm-title"><mat-icon aria-hidden="true">warning</mat-icon> {{ title }}</h2>
+    <p>{{ message }}</p>
+
+    @if (details.length > 0) {
+      <ul>
+        @for (line of details; track line) {
+          <li>{{ line }}</li>
+        }
+      </ul>
+    }
+
+    <!-- Brand book: one blue button per screen. Here the safe choice (Cancel) is the secondary button,
+         and the risky choice is the primary one, so the user has to mean it. -->
+    <div class="os-row buttons">
+      <button type="button" class="os-btn" (click)="cancel()">Cancel</button>
+      <button type="button" class="os-btn os-btn--primary" (click)="confirm()">{{ confirmLabel }}</button>
+    </div>
+  </div>
+</div>

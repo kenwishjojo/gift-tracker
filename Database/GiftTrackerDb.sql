@@ -1,9 +1,11 @@
--- Gift Tracker – database script (ER design "without preferences", 6 tables)
+-- Gift Tracker – database script (ER design "without preferences", 7 tables: the 6 from the
+-- diagram + occasion_invite, added so occasions are only seen by their creator and invited friends)
 -- Diagram: docs/er-design-without-preferences.svg
 -- Run this in pgAdmin's Query Tool on the app-gifttrackerdb database.
 -- Built in the same order as the class script: drop -> create tables + sequences ->
 -- id defaults -> test data -> setval -> primary keys -> unique keys -> foreign keys -> checks
 
+DROP TABLE IF EXISTS public.occasion_invite CASCADE;
 DROP TABLE IF EXISTS public.group_member CASCADE;
 DROP TABLE IF EXISTS public.gift_group CASCADE;
 DROP TABLE IF EXISTS public.gift CASCADE;
@@ -11,6 +13,7 @@ DROP TABLE IF EXISTS public.occasion CASCADE;
 DROP TABLE IF EXISTS public.connection CASCADE;
 DROP TABLE IF EXISTS public.profile CASCADE;
 
+DROP SEQUENCE IF EXISTS public.occasion_invite_id_seq;
 DROP SEQUENCE IF EXISTS public.group_member_id_seq;
 DROP SEQUENCE IF EXISTS public.gift_group_id_seq;
 DROP SEQUENCE IF EXISTS public.gift_id_seq;
@@ -19,7 +22,7 @@ DROP SEQUENCE IF EXISTS public.connection_id_seq;
 DROP SEQUENCE IF EXISTS public.profile_id_seq;
 
 -- Tables from the old 13-table design (Option C) that no longer exist.
--- Dropped so a database that ran the old script ends up with only the 6 new tables.
+-- Dropped so a database that ran the old script ends up with only the new tables.
 DROP TABLE IF EXISTS public.gift_contribution CASCADE;
 DROP TABLE IF EXISTS public.reservation CASCADE;
 DROP TABLE IF EXISTS public.wish_item CASCADE;
@@ -81,10 +84,13 @@ CREATE SEQUENCE public.connection_id_seq
 ALTER SEQUENCE public.connection_id_seq OWNED BY public.connection.id;
 
 
+-- Who the occasion is for: a profile (recipientid) OR, for someone without an account, just a name
+-- (recipientname). Exactly one of the two is filled – checked by chk_occasion_recipient at the bottom.
 CREATE TABLE public.occasion (
     id integer NOT NULL,
     createdbyid integer NOT NULL,
-    recipientid integer NOT NULL,
+    recipientid integer,
+    recipientname text,
     name text NOT NULL,
     eventdate date NOT NULL,
     type text NOT NULL,
@@ -167,6 +173,27 @@ CREATE SEQUENCE public.group_member_id_seq
     CACHE 1;
 
 ALTER SEQUENCE public.group_member_id_seq OWNED BY public.group_member.id;
+
+
+-- Who is invited to an occasion. You see an occasion when you created it or are invited to it –
+-- and never when it is for you (the gifts are a surprise). Only the creator's friends are invited
+-- (checked by the API, because it needs the connection table).
+CREATE TABLE public.occasion_invite (
+    id integer NOT NULL,
+    occasionid integer NOT NULL,
+    profileid integer NOT NULL,
+    invitedat timestamptz NOT NULL
+);
+
+CREATE SEQUENCE public.occasion_invite_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.occasion_invite_id_seq OWNED BY public.occasion_invite.id;
 -- End table creation
 COMMIT;
 
@@ -186,6 +213,8 @@ ALTER TABLE ONLY public.gift_group ALTER COLUMN id SET DEFAULT nextval('public.g
 
 ALTER TABLE ONLY public.group_member ALTER COLUMN id SET DEFAULT nextval('public.group_member_id_seq'::regclass);
 
+ALTER TABLE ONLY public.occasion_invite ALTER COLUMN id SET DEFAULT nextval('public.occasion_invite_id_seq'::regclass);
+
 ALTER TABLE ONLY public.profile ALTER COLUMN createdat SET DEFAULT now();
 
 ALTER TABLE ONLY public.connection ALTER COLUMN createdat SET DEFAULT now();
@@ -193,6 +222,8 @@ ALTER TABLE ONLY public.connection ALTER COLUMN createdat SET DEFAULT now();
 ALTER TABLE ONLY public.gift_group ALTER COLUMN createdat SET DEFAULT now();
 
 ALTER TABLE ONLY public.group_member ALTER COLUMN joinedat SET DEFAULT now();
+
+ALTER TABLE ONLY public.occasion_invite ALTER COLUMN invitedat SET DEFAULT now();
 COMMIT;
 
 BEGIN;
@@ -222,25 +253,40 @@ INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) 
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (10, 5, 9, 'accepted', '2026-09-12 16:40:00+02');
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (11, 3, 8, 'accepted', '2026-09-20 14:10:00+02');
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (12, 2, 8, 'pending', '2026-10-15 09:30:00+02');
-INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (13, 9, 10, 'pending', '2026-10-20 20:50:00+02');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (13, 9, 10, 'accepted', '2026-10-20 20:50:00+02');
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (14, 4, 10, 'accepted', '2026-10-22 18:10:00+02');
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (15, 10, 2, 'accepted', '2026-10-23 12:00:00+02');
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (16, 6, 3, 'accepted', '2026-10-24 09:45:00+02');
+-- More friendships, so every person who buys or splits a gift is a friend of the occasion's creator
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (17, 2, 6, 'accepted', '2026-10-26 10:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (18, 7, 2, 'accepted', '2026-10-26 11:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (19, 8, 1, 'accepted', '2026-10-26 12:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (20, 2, 5, 'accepted', '2026-10-26 13:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (21, 5, 10, 'accepted', '2026-10-26 14:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (22, 3, 5, 'accepted', '2026-10-26 15:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (23, 9, 3, 'accepted', '2026-10-26 16:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (24, 3, 10, 'accepted', '2026-10-26 17:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (25, 4, 9, 'accepted', '2026-10-26 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (26, 8, 9, 'accepted', '2026-10-26 19:00:00+01');
+-- A request still waiting for an answer (log in as Freja to accept or decline it)
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (27, 6, 9, 'pending', '2026-11-05 19:15:00+01');
 
 -- The same name and date is fine for different recipients (Christmas), and the same name for one
 -- recipient is fine on a different date (Anna's birthday in 2025 and 2026)
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (1, 2, 1, 'Anna''s birthday', '2026-12-03', 'birthday', 'She turns 31');
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (2, 1, 2, 'Mads'' 40th birthday', '2027-02-10', 'birthday', 'Big party at his place in Aarhus');
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (3, 1, 3, 'Christmas 2026', '2026-12-24', 'christmas', NULL);
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (4, 1, 6, 'Christmas 2026', '2026-12-24', 'christmas', 'Dad says he wants nothing – ignore him');
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (5, 1, 7, 'Christmas 2026', '2026-12-24', 'christmas', NULL);
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (6, 6, 7, 'Wedding anniversary', '2027-06-12', 'anniversary', '30 years married');
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (7, 5, 4, 'Frederik''s birthday', '2027-04-15', 'birthday', NULL);
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (8, 4, 5, 'Ida''s birthday', '2026-11-18', 'birthday', 'Dinner at Ida''s on Friday');
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (9, 3, 8, 'Emil''s graduation', '2027-06-25', 'other', 'Finishes his bachelor at CBS');
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (10, 9, 10, 'Kasper''s housewarming', '2026-11-14', 'other', 'New flat in Valby');
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (11, 5, 9, 'Freja''s birthday', '2026-12-19', 'birthday', NULL);
-INSERT INTO public.occasion (id, createdbyid, recipientid, name, eventdate, type, notes) VALUES (12, 3, 1, 'Anna''s birthday', '2025-12-03', 'birthday', NULL);
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (1, 2, 1, NULL, 'Anna''s birthday', '2026-12-03', 'birthday', 'She turns 31');
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (2, 1, 2, NULL, 'Mads'' 40th birthday', '2027-02-10', 'birthday', 'Big party at his place in Aarhus');
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (3, 1, 3, NULL, 'Christmas 2026', '2026-12-24', 'christmas', NULL);
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (4, 1, 6, NULL, 'Christmas 2026', '2026-12-24', 'christmas', 'Dad says he wants nothing – ignore him');
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (5, 1, 7, NULL, 'Christmas 2026', '2026-12-24', 'christmas', NULL);
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (6, 6, 7, NULL, 'Wedding anniversary', '2027-06-12', 'anniversary', '30 years married');
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (7, 5, 4, NULL, 'Frederik''s birthday', '2027-04-15', 'birthday', NULL);
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (8, 4, 5, NULL, 'Ida''s birthday', '2026-11-18', 'birthday', 'Dinner at Ida''s on Friday');
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (9, 3, 8, NULL, 'Emil''s graduation', '2027-06-25', 'other', 'Finishes his bachelor at CBS');
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (10, 9, 10, NULL, 'Kasper''s housewarming', '2026-11-14', 'other', 'New flat in Valby');
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (11, 5, 9, NULL, 'Freja''s birthday', '2026-12-19', 'birthday', NULL);
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (12, 3, 1, NULL, 'Anna''s birthday', '2025-12-03', 'birthday', NULL);
+-- For someone without an account: only a name, no recipientid
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (13, 1, NULL, 'Mormor', 'Mormor''s 80th birthday', '2027-03-05', 'birthday', 'Family lunch in Odense');
 
 -- The buyer is never the occasion's recipient (that rule is checked by the API)
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (1, 1, 2, 'Wool scarf', 'Dark green – her favourite colour', 349, 'https://example.com/wool-scarf', 'bought');
@@ -272,6 +318,7 @@ INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (26, 9, 9, 'Laptop backpack', 'For his first job', 700, NULL, 'planned', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (27, 11, 10, 'Yoga course', 'Ten classes at her local studio', 1200, NULL, 'idea', 3);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (28, 7, 10, 'Climbing day', 'Indoor climbing with instructor', 900, 'https://example.com/climbing', 'planned', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (29, 13, 1, 'Photo book', 'Photos of the whole family', 450, NULL, 'planned', 3);
 
 -- Every split gift has a group: the buyer is the owner and the friends they split with are viewers.
 -- splitcount on the gift = the number of members in its group.
@@ -295,6 +342,7 @@ INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES 
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (18, 26, 'Laptop backpack', NULL, '2026-10-25 10:00:00+02');
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (19, 27, 'Yoga course', NULL, '2026-10-25 10:00:00+02');
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (20, 28, 'Climbing day', NULL, '2026-10-25 10:00:00+02');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (21, 29, 'Photo book', NULL, '2026-11-01 10:00:00+01');
 
 -- Each group has exactly one owner (checked by the API), who is also the gift's buyer
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (1, 1, 6, 'owner', '2026-10-02 19:00:00+02');
@@ -344,20 +392,56 @@ INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES 
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (45, 19, 2, 'viewer', '2026-10-25 12:00:00+02');
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (46, 20, 10, 'owner', '2026-10-25 10:00:00+02');
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (47, 20, 2, 'viewer', '2026-10-25 12:00:00+02');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (48, 21, 1, 'owner', '2026-11-01 10:00:00+01');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (49, 21, 6, 'viewer', '2026-11-01 12:00:00+01');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (50, 21, 7, 'viewer', '2026-11-01 12:00:00+01');
+
+-- Invites: everyone who buys or splits a gift on an occasion is invited to it, and all of them are
+-- friends of the occasion's creator
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (1, 1, 3, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (2, 1, 6, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (3, 1, 7, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (4, 2, 3, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (5, 2, 8, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (6, 3, 2, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (7, 4, 3, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (8, 4, 7, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (9, 5, 6, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (10, 6, 1, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (11, 7, 2, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (12, 7, 10, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (13, 8, 1, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (14, 9, 1, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (15, 9, 2, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (16, 9, 5, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (17, 9, 9, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (18, 9, 10, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (19, 10, 3, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (20, 10, 4, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (21, 10, 5, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (22, 10, 8, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (23, 11, 2, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (24, 11, 4, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (25, 11, 10, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (26, 12, 2, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (27, 13, 6, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (28, 13, 7, '2026-10-27 09:00:00+01');
 COMMIT;
 
 BEGIN;
 SELECT pg_catalog.setval('public.profile_id_seq', 10, true);
 
-SELECT pg_catalog.setval('public.connection_id_seq', 16, true);
+SELECT pg_catalog.setval('public.connection_id_seq', 27, true);
 
-SELECT pg_catalog.setval('public.occasion_id_seq', 12, true);
+SELECT pg_catalog.setval('public.occasion_id_seq', 13, true);
 
-SELECT pg_catalog.setval('public.gift_id_seq', 28, true);
+SELECT pg_catalog.setval('public.gift_id_seq', 29, true);
 
-SELECT pg_catalog.setval('public.gift_group_id_seq', 20, true);
+SELECT pg_catalog.setval('public.gift_group_id_seq', 21, true);
 
-SELECT pg_catalog.setval('public.group_member_id_seq', 47, true);
+SELECT pg_catalog.setval('public.group_member_id_seq', 50, true);
+
+SELECT pg_catalog.setval('public.occasion_invite_id_seq', 28, true);
 COMMIT;
 
 -- Primary keys
@@ -379,6 +463,9 @@ ALTER TABLE ONLY public.gift_group
 ALTER TABLE ONLY public.group_member
     ADD CONSTRAINT group_member_pkey PRIMARY KEY (id);
 
+ALTER TABLE ONLY public.occasion_invite
+    ADD CONSTRAINT occasion_invite_pkey PRIMARY KEY (id);
+
 
 -- Unique keys (stop duplicate rows)
 -- One account per email address, regardless of upper/lower case
@@ -397,6 +484,10 @@ ALTER TABLE ONLY public.gift_group
 
 ALTER TABLE ONLY public.group_member
     ADD CONSTRAINT uk_group_member_groupid_profileid UNIQUE (groupid, profileid);
+
+-- A person is invited to an occasion only once
+ALTER TABLE ONLY public.occasion_invite
+    ADD CONSTRAINT uk_occasion_invite_occasionid_profileid UNIQUE (occasionid, profileid);
 
 
 -- Foreign keys (the arrows in the ER diagram)
@@ -445,6 +536,17 @@ ALTER TABLE ONLY public.group_member
     ON UPDATE NO ACTION
     ON DELETE CASCADE;
 
+-- Deleting an occasion or a profile also deletes their invites
+ALTER TABLE ONLY public.occasion_invite
+    ADD CONSTRAINT fk_occasion_invite_occasionid FOREIGN KEY (occasionid) REFERENCES public.occasion(id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.occasion_invite
+    ADD CONSTRAINT fk_occasion_invite_profileid FOREIGN KEY (profileid) REFERENCES public.profile(id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
 
 -- Check constraints ("Rules enforced by checks" in the ER diagram)
 ALTER TABLE ONLY public.connection
@@ -456,6 +558,15 @@ ALTER TABLE ONLY public.connection
 
 ALTER TABLE ONLY public.occasion
     ADD CONSTRAINT chk_occasion_type CHECK (type IN ('birthday', 'christmas', 'anniversary', 'other'));
+
+-- An occasion is for a profile OR for a name, never both and never neither
+-- ("IS NULL <> IS NULL" is true only when exactly one of the two is filled)
+ALTER TABLE ONLY public.occasion
+    ADD CONSTRAINT chk_occasion_recipient CHECK ((recipientid IS NULL) <> (recipientname IS NULL));
+
+-- You can't make an occasion for yourself (it would be hidden from you – the gifts are a surprise)
+ALTER TABLE ONLY public.occasion
+    ADD CONSTRAINT chk_occasion_not_self CHECK (recipientid <> createdbyid);
 
 ALTER TABLE ONLY public.gift
     ADD CONSTRAINT chk_gift_status CHECK (status IN ('idea', 'planned', 'bought', 'given'));

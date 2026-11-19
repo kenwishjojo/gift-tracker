@@ -34,3 +34,10 @@
 .occasion-actions {
   margin-top: 16px;
 }
+
+/* Lock icon and text on one line */
+.locked {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

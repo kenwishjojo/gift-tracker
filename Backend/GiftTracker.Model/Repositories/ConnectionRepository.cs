@@ -31,6 +31,30 @@ public class ConnectionRepository : BaseRepository
         }
     }
 
+    // True when the two profiles are friends: an accepted connection between them in either direction.
+    // Used by the API rules "the recipient and the invited people must be the creator's friends".
+    public bool AreFriends(int profileA, int profileB)
+    {
+        NpgsqlConnection? dbConn = null;
+        try
+        {
+            dbConn = new NpgsqlConnection(ConnectionString);
+            var cmd = dbConn.CreateCommand();
+            cmd.CommandText = @"
+                select count(*) from connection
+                where status = 'accepted'
+                and ((requesterid = @a and addresseeid = @b) or (requesterid = @b and addresseeid = @a))";
+            cmd.Parameters.AddWithValue("@a", NpgsqlDbType.Integer, profileA);
+            cmd.Parameters.AddWithValue("@b", NpgsqlDbType.Integer, profileB);
+            dbConn.Open();
+            return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+        }
+        finally
+        {
+            dbConn?.Close();
+        }
+    }
+
     public List<Connection> GetConnections()
     {
         NpgsqlConnection? dbConn = null;

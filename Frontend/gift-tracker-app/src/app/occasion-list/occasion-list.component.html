@@ -5,19 +5,19 @@
 </div>
 
 <div class="os-stack">
-  @for (occasion of upcoming; track occasion.id) {
-    <app-occasion-card [occasion]="occasion" [recipient]="findProfile(occasion.recipientId)"
+  @for (occasion of upcoming(); track occasion.id) {
+    <app-occasion-card [occasion]="occasion" [recipientName]="recipientName(occasion)"
                        [gifts]="giftsFor(occasion)" [meId]="meId" [splitGiftIds]="mySplitGiftIds()" />
   } @empty {
-    <p>No upcoming occasions. Enjoy the calm.</p>
+    <p>No upcoming occasions. Add one, or ask a friend to invite you. Enjoy the calm.</p>
   }
 </div>
 
-@if (past.length > 0) {
+@if (past().length > 0) {
   <h2>Past occasions</h2>
   <div class="os-stack">
-    @for (occasion of past; track occasion.id) {
-      <app-occasion-card [occasion]="occasion" [recipient]="findProfile(occasion.recipientId)"
+    @for (occasion of past(); track occasion.id) {
+      <app-occasion-card [occasion]="occasion" [recipientName]="recipientName(occasion)"
                          [gifts]="giftsFor(occasion)" [meId]="meId" [splitGiftIds]="mySplitGiftIds()" />
     }
   </div>

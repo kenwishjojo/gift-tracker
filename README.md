@@ -9,8 +9,8 @@ Student group project for the CBS course *Designing and Developing Digital Busin
 
 | Part | What it is | Tech | Status |
 |---|---|---|---|
-| `Database/` | Script that creates the 6 tables with test data | PostgreSQL / pgAdmin 4 | ✅ Done |
-| `Backend/` | The REST API and the code that talks to the database | C# / ASP.NET Core Web API, Npgsql | ✅ CRUD for all 6 tables + login |
+| `Database/` | Script that creates the 7 tables with test data | PostgreSQL / pgAdmin 4 | ✅ Done |
+| `Backend/` | The REST API and the code that talks to the database | C# / ASP.NET Core Web API, Npgsql | ✅ CRUD for all 7 tables + login |
 | `Frontend/` | The web app | Angular 21, Angular Material | ✅ First version done |
 | `docs/` | ER diagram and brand book (`GiftTracker-brandbog.pdf`) | | |
 
@@ -18,16 +18,21 @@ The frontend calls the API, and only the API talks to the database.
 
 ### What the app can do
 
-- **Log in** with email and password (the first page), then land on **Home**.
-- **Occasions**: see upcoming and past occasions as cards, and add, edit or delete an occasion.
+- **Log in** with email and password (the first page), or **create an account** (sign-up, with the
+  terms and conditions), then land on **Home**.
+- **Occasions**: you only see occasions you made or were **invited** to – never the ones for you.
+  When you add an occasion, it is for one of your friends or for someone without an account (just a
+  name), and you tick which friends to invite.
+- **Past occasions are locked**: they can be viewed and deleted, but not changed.
 - **Gifts**: add, edit and delete gift ideas for an occasion, with name, description, price, link and
   status (idea, planned, bought or given).
-- **Split a gift with friends**: tick the friends who share the price. The app shows the total price
-  and **your share** on the gift form, the occasion page and the occasion cards.
+- **Split a gift with friends**: tick the friends who share the price (only friends invited to the
+  occasion). The app shows **your share** on the gift form, the occasion page and the occasion cards.
 - **Home feed**: "Gifts you're splitting" – every gift you split for an upcoming occasion, whether you
   buy it or a friend ticked you, with the occasion, who else is in, the total and your share.
-- **Gifts are a surprise**: you don't see the gifts planned for your own occasions.
-- **Profile page**: a person's details and the occasions where they get gifts.
+- **Warning box** before every delete and before saving changes to an existing gift or occasion.
+- **Profile page**: a person's details and the occasions for them that you're invited to. On your own
+  profile: the terms and conditions, and **delete my account** (the warning box lists what goes with it).
 - **Friends**: send a friend request by email, accept or decline requests you get, cancel ones you
   sent, and remove friends.
 - Design from our brand book: colours, fonts (Outfit, Inter) and components.
@@ -36,23 +41,24 @@ The frontend calls the API, and only the API talks to the database.
 
 - **Filtered endpoints** (step 4 of the plan), e.g. `GET /api/Gift/occasion/{id}`. Today the app gets
   all rows and filters them itself.
-- **Sharing occasions** with other people (on hold: the group still has to choose a design).
 - **Known limitation**: the login only identifies you in the app. The API has no tokens, so it doesn't
   know who is asking (e.g. Swagger still shows every gift). Real authentication is future work.
 
-### The 6 tables
+### The 7 tables
 
 | Table | What it stores |
 |---|---|
 | `profile` | A user (`user` is a reserved word in PostgreSQL). The password is stored as a BCrypt hash |
 | `connection` | A friend request between two profiles (`pending` or `accepted`) |
-| `occasion` | An event for one recipient, e.g. a birthday |
+| `occasion` | An event for one recipient, e.g. a birthday. The recipient is a profile **or** just a name (`recipientname`) for someone without an account |
 | `gift` | A gift for an occasion, who buys it, and how many people split the price (`splitcount`). The recipient comes from the occasion |
 | `gift_group` | People splitting one gift (at most one group per gift) |
 | `group_member` | A member of a gift group, either `owner` (exactly one) or `viewer` |
+| `occasion_invite` | A friend invited to an occasion by its creator (added after the ER diagram – update it for the report) |
 
-Two rules are checked in the API because the database can't check them on its own:
-a gift's buyer can't be the occasion's recipient, and a gift group has exactly one owner.
+Rules checked in the API because the database can't check them on its own: a gift's buyer can't be the
+occasion's recipient, a gift group has exactly one owner, the recipient and invited people must be the
+creator's friends, and past occasions (and their gifts) can't be changed.
 
 ## Getting started
 
@@ -61,8 +67,8 @@ a gift's buyer can't be the occasion's recipient, and a gift group has exactly o
 2. Open the Query Tool **on that database**, open `Database/GiftTrackerDb.sql` and press F5.
 
 Running the script again deletes and recreates all tables with the test data. **Re-run it after
-pulling** if the script has changed (e.g. the `splitcount` column in PR #7, and the split groups and
-extra friendships in the test data for splitting with friends).
+pulling** if the script has changed (e.g. the `occasion_invite` table and the new `occasion.recipientname`
+column for invites and sign-up).
 
 ### Backend
 1. Put your pgAdmin password and database name in `Backend/GiftTracker.API/appsettings.Local.json`

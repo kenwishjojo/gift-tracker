@@ -48,3 +48,10 @@
   height: 20px;
   accent-color: var(--black);
 }
+
+/* Lock icon and text on one line */
+.locked {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

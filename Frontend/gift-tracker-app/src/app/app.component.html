@@ -10,7 +10,8 @@
       <a routerLink="/occasions">Occasions</a>
       <a routerLink="/friends">Friends</a>
       <a [routerLink]="['/profile', authService.getProfile()?.id]">My profile</a>
-      <button type="button" class="os-btn os-btn--link" (click)="logout()">Log out</button>
+      <!-- Opens the warning box first; the box calls logout() only if the user says yes -->
+      <button type="button" class="os-btn os-btn--link" (click)="showLogoutConfirm = true">Log out</button>
     </nav>
   }
 </mat-toolbar>
@@ -18,3 +19,13 @@
 <main class="os-page">
   <router-outlet />
 </main>
+
+<!-- Warning box before logging out (the same ConfirmDialogComponent as for deletes and edits) -->
+@if (showLogoutConfirm) {
+  <app-confirm-dialog
+    title="Log out?"
+    message="You'll need your email and password to log back in. Your occasions, gifts and friends are kept."
+    confirmLabel="Log out"
+    (confirmed)="logout()"
+    (cancelled)="showLogoutConfirm = false" />
+}

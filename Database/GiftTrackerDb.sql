@@ -270,6 +270,18 @@ INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) 
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (26, 8, 9, 'accepted', '2026-10-26 19:00:00+01');
 -- A request still waiting for an answer (log in as Freja to accept or decline it)
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (27, 6, 9, 'pending', '2026-11-05 19:15:00+01');
+-- More requests waiting for an answer: every test profile has sent one and received one,
+-- so each of them can try Accept, Decline and Cancel on the Friends page
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (28, 1, 10, 'pending', '2026-11-10 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (29, 10, 8, 'pending', '2026-11-11 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (30, 8, 7, 'pending', '2026-11-12 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (31, 7, 4, 'pending', '2026-11-13 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (32, 4, 3, 'pending', '2026-11-14 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (33, 3, 7, 'pending', '2026-11-15 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (34, 5, 6, 'pending', '2026-11-16 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (35, 9, 1, 'pending', '2026-11-17 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (36, 4, 2, 'pending', '2026-11-18 18:00:00+01');
+INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (37, 7, 5, 'pending', '2026-11-19 18:00:00+01');
 
 -- The same name and date is fine for different recipients (Christmas), and the same name for one
 -- recipient is fine on a different date (Anna's birthday in 2025 and 2026)
@@ -287,6 +299,10 @@ INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, 
 INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (12, 3, 1, NULL, 'Anna''s birthday', '2025-12-03', 'birthday', NULL);
 -- For someone without an account: only a name, no recipientid
 INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (13, 1, NULL, 'Mormor', 'Mormor''s 80th birthday', '2027-03-05', 'birthday', 'Family lunch in Odense');
+-- Made by Mette, Emil and Kasper, so every test profile has made at least one occasion
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (14, 7, 6, NULL, 'Lars'' birthday', '2027-01-22', 'birthday', 'Small dinner at home');
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (15, 8, 3, NULL, 'Sofie''s birthday', '2027-06-21', 'birthday', NULL);
+INSERT INTO public.occasion (id, createdbyid, recipientid, recipientname, name, eventdate, type, notes) VALUES (16, 10, 4, NULL, 'Christmas 2026', '2026-12-24', 'christmas', 'Secret Santa among friends');
 
 -- The buyer is never the occasion's recipient (that rule is checked by the API)
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status) VALUES (1, 1, 2, 'Wool scarf', 'Dark green – her favourite colour', 349, 'https://example.com/wool-scarf', 'bought');
@@ -319,6 +335,9 @@ INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (27, 11, 10, 'Yoga course', 'Ten classes at her local studio', 1200, NULL, 'idea', 3);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (28, 7, 10, 'Climbing day', 'Indoor climbing with instructor', 900, 'https://example.com/climbing', 'planned', 2);
 INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (29, 13, 1, 'Photo book', 'Photos of the whole family', 450, NULL, 'planned', 3);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (30, 14, 7, 'Golf lessons', 'Five lessons with a pro', 1200, NULL, 'planned', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (31, 15, 8, 'Plant workshop', 'Evening workshop at a garden centre', 500, 'https://example.com/plant-workshop', 'idea', 2);
+INSERT INTO public.gift (id, occasionid, buyerid, name, description, price, link, status, splitcount) VALUES (32, 16, 10, 'Board game café night', 'Table for four and snacks', 400, NULL, 'idea', 2);
 
 -- Every split gift has a group: the buyer is the owner and the friends they split with are viewers.
 -- splitcount on the gift = the number of members in its group.
@@ -343,6 +362,9 @@ INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES 
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (19, 27, 'Yoga course', NULL, '2026-10-25 10:00:00+02');
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (20, 28, 'Climbing day', NULL, '2026-10-25 10:00:00+02');
 INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (21, 29, 'Photo book', NULL, '2026-11-01 10:00:00+01');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (22, 30, 'Golf lessons', NULL, '2026-11-10 10:00:00+01');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (23, 31, 'Plant workshop', NULL, '2026-11-10 10:00:00+01');
+INSERT INTO public.gift_group (id, giftid, name, description, createdat) VALUES (24, 32, 'Board game café night', NULL, '2026-11-10 10:00:00+01');
 
 -- Each group has exactly one owner (checked by the API), who is also the gift's buyer
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (1, 1, 6, 'owner', '2026-10-02 19:00:00+02');
@@ -395,6 +417,12 @@ INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES 
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (48, 21, 1, 'owner', '2026-11-01 10:00:00+01');
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (49, 21, 6, 'viewer', '2026-11-01 12:00:00+01');
 INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (50, 21, 7, 'viewer', '2026-11-01 12:00:00+01');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (51, 22, 7, 'owner', '2026-11-10 12:00:00+01');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (52, 22, 1, 'viewer', '2026-11-10 12:00:00+01');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (53, 23, 8, 'owner', '2026-11-10 12:00:00+01');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (54, 23, 9, 'viewer', '2026-11-10 12:00:00+01');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (55, 24, 10, 'owner', '2026-11-10 12:00:00+01');
+INSERT INTO public.group_member (id, groupid, profileid, role, joinedat) VALUES (56, 24, 2, 'viewer', '2026-11-10 12:00:00+01');
 
 -- Invites: everyone who buys or splits a gift on an occasion is invited to it, and all of them are
 -- friends of the occasion's creator
@@ -426,22 +454,28 @@ INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES
 INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (26, 12, 2, '2026-10-27 09:00:00+01');
 INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (27, 13, 6, '2026-10-27 09:00:00+01');
 INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (28, 13, 7, '2026-10-27 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (29, 14, 1, '2026-11-10 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (30, 14, 2, '2026-11-10 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (31, 15, 1, '2026-11-10 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (32, 15, 9, '2026-11-10 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (33, 16, 2, '2026-11-10 09:00:00+01');
+INSERT INTO public.occasion_invite (id, occasionid, profileid, invitedat) VALUES (34, 16, 5, '2026-11-10 09:00:00+01');
 COMMIT;
 
 BEGIN;
 SELECT pg_catalog.setval('public.profile_id_seq', 10, true);
 
-SELECT pg_catalog.setval('public.connection_id_seq', 27, true);
+SELECT pg_catalog.setval('public.connection_id_seq', 37, true);
 
-SELECT pg_catalog.setval('public.occasion_id_seq', 13, true);
+SELECT pg_catalog.setval('public.occasion_id_seq', 16, true);
 
-SELECT pg_catalog.setval('public.gift_id_seq', 29, true);
+SELECT pg_catalog.setval('public.gift_id_seq', 32, true);
 
-SELECT pg_catalog.setval('public.gift_group_id_seq', 21, true);
+SELECT pg_catalog.setval('public.gift_group_id_seq', 24, true);
 
-SELECT pg_catalog.setval('public.group_member_id_seq', 50, true);
+SELECT pg_catalog.setval('public.group_member_id_seq', 56, true);
 
-SELECT pg_catalog.setval('public.occasion_invite_id_seq', 28, true);
+SELECT pg_catalog.setval('public.occasion_invite_id_seq', 34, true);
 COMMIT;
 
 -- Primary keys

@@ -55,7 +55,8 @@ public class ProfileRepository : BaseRepository
     }
 
     // Log-in: returns the profile if the email exists and the password matches its hash, otherwise null.
-    // This is the only method that reads passwordhash, and the hash is never put into the Profile object.
+    // Same approach as AuthRepository in Lecture 10: the password is checked inside the database with
+    // pgcrypto's crypt(), so the hash is never read into C# and never put into the Profile object.
     public Profile? CheckLogin(string email, string password)
     {
         NpgsqlConnection? dbConn = null;
@@ -63,20 +64,21 @@ public class ProfileRepository : BaseRepository
         {
             dbConn = new NpgsqlConnection(ConnectionString);
             var cmd = dbConn.CreateCommand();
-            // lower() on both sides: emails are unique regardless of capital letters
+            // lower() on both sides: emails are unique regardless of capital letters.
+            // crypt(@password, passwordhash) hashes the typed password with the salt stored inside the
+            // existing hash; it only equals passwordhash if the password is right.
             cmd.CommandText = @"
-                select id, fullname, email, passwordhash, dateofbirth, profilepictureurl, createdat
-                from profile where lower(email) = lower(@email)";
+                select id, fullname, email, dateofbirth, profilepictureurl, createdat
+                from profile
+                where lower(email) = lower(@email)
+                and passwordhash = crypt(@password, passwordhash)";
             cmd.Parameters.AddWithValue("@email", NpgsqlDbType.Text, email);
+            cmd.Parameters.AddWithValue("@password", NpgsqlDbType.Text, password);
             using var data = GetData(dbConn, cmd);
+            // A row only comes back when both the email and the password match
             if (data.Read())
             {
-                string hash = Convert.ToString(data["passwordhash"])!;
-                // BCrypt hashes the typed password the same way and compares it with the stored hash
-                if (BCrypt.Net.BCrypt.Verify(password, hash))
-                {
-                    return ReadProfile(data);
-                }
+                return ReadProfile(data);
             }
             return null;
         }
@@ -98,14 +100,17 @@ public class ProfileRepository : BaseRepository
                 insert into profile
                 (fullname, email, passwordhash, dateofbirth, profilepictureurl)
                 values
-                (@fullname, @email, @passwordhash, @dateofbirth, @profilepictureurl)
+                (@fullname, @email, crypt(@password, gen_salt('bf', 10)), @dateofbirth, @profilepictureurl)
                 returning id";
             cmd.Parameters.AddWithValue("@fullname", NpgsqlDbType.Text, p.FullName);
             cmd.Parameters.AddWithValue("@email", NpgsqlDbType.Text, p.Email);
             cmd.Parameters.AddWithValue("@dateofbirth", NpgsqlDbType.Date, p.DateOfBirth);
             cmd.Parameters.AddWithValue("@profilepictureurl", NpgsqlDbType.Text, DbValue(p.ProfilePictureUrl));
-            // Never store the plain password – only a BCrypt hash of it
-            cmd.Parameters.AddWithValue("@passwordhash", NpgsqlDbType.Text, BCrypt.Net.BCrypt.HashPassword(p.Password!));
+            // Never store the plain password – the database hashes it with bcrypt (pgcrypto, Lecture 10):
+            // gen_salt('bf', 10) makes a new random salt, crypt() hashes the password with it.
+            // The 10 is bcrypt's cost (work factor): Lecture 10's gen_salt('bf') defaults to 6, and 10 matches
+            // the test data – each step up doubles the work, which slows down password guessing.
+            cmd.Parameters.AddWithValue("@password", NpgsqlDbType.Text, p.Password!);
             return InsertAndGetId(dbConn, cmd);
         }
         finally

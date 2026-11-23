@@ -48,7 +48,7 @@ The frontend calls the API, and only the API talks to the database.
 
 | Table | What it stores |
 |---|---|
-| `profile` | A user (`user` is a reserved word in PostgreSQL). The password is stored as a BCrypt hash |
+| `profile` | A user (`user` is a reserved word in PostgreSQL). The password is stored as a bcrypt hash made by pgcrypto in the database (as in Lecture 10) |
 | `connection` | A friend request between two profiles (`pending` or `accepted`) |
 | `occasion` | An event for one recipient, e.g. a birthday. The recipient is a profile **or** just a name (`recipientname`) for someone without an account |
 | `gift` | A gift for an occasion, who buys it, and how many people split the price (`splitcount`). The recipient comes from the occasion |

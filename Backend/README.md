@@ -97,8 +97,10 @@ These rules can't be written as simple database checks, so the controllers check
 
 ## Things worth knowing
 
-- **Passwords**: `POST /api/Profile` takes a `password` (min. 8 characters), hashes it with BCrypt and stores
-  only the hash in `passwordhash`. The API never selects or sends back the hash, and `PUT` doesn't change the password.
+- **Passwords**: `POST /api/Profile` takes a `password` (min. 8 characters). Like Lecture 10, the database
+  hashes it with pgcrypto (`crypt(@password, gen_salt('bf', 10))`, i.e. bcrypt with cost 10) and stores only the hash in
+  `passwordhash`. Log-in checks it in SQL with `passwordhash = crypt(@password, passwordhash)`. The API never
+  selects or sends back the hash, and `PUT` doesn't change the password. The SQL script enables pgcrypto.
   All test profiles have the password `GaveListe2026`.
 - **Dates**: `dateOfBirth` and `eventDate` are `DateOnly` – send them as `"2026-12-03"`.
   `createdAt` and `joinedAt` are set by the database (default `now()`), so you don't send them.

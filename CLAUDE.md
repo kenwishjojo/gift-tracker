@@ -55,7 +55,7 @@ in Figma, and the old 6-table SVG is in git history). The old Option C SQL + bac
 
 **profile** (a user – `user` is a reserved word in PostgreSQL)
 - `id` int PK (sequence) · `fullname` text · `email` text **UK** (case-insensitive: unique index on `lower(email)`)
-- `passwordhash` text (BCrypt) · `dateofbirth` date · `profilepictureurl` text NULL · `createdat` timestamptz default now()
+- `passwordhash` text (bcrypt made by pgcrypto in the database: `crypt(@password, gen_salt('bf', 10))`, as in Lecture 10) · `dateofbirth` date · `profilepictureurl` text NULL · `createdat` timestamptz default now()
 
 **connection** (friend requests between two profiles)
 - `id` int PK · `requesterid` int FK → profile · `addresseeid` int FK → profile
@@ -123,7 +123,7 @@ in Figma, and the old 6-table SVG is in git history). The old Option C SQL + bac
    Keep what already works: `BaseRepository` (helpers for NULL columns, `InsertAndGetId` with
    `returning id`), `Program.cs` (repository registration, CORS, Swagger, middleware that turns
    PostgreSQL constraint errors `23xxx` into **400 Bad Request**, `appsettings.Local.json` for the
-   password), BCrypt hashing on `POST /api/Profile` and never returning `passwordhash`.
+   password), password hashing on `POST /api/Profile` (now pgcrypto in SQL, as in Lecture 10) and never returning `passwordhash`.
    Same endpoint shape per table: GET all, GET `{id}`, POST (returns the new row with its id),
    PUT (id in body), DELETE `{id}`. Add the two API rules above. Update `Backend/README.md`.
    Test every endpoint in Swagger with `dotnet run --project GiftTracker.API`.

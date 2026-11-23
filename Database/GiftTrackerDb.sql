@@ -39,6 +39,9 @@ DROP SEQUENCE IF EXISTS public.external_link_id_seq;
 DROP SEQUENCE IF EXISTS public.preference_item_id_seq;
 DROP SEQUENCE IF EXISTS public.preference_type_id_seq;
 
+-- pgcrypto gives PostgreSQL the crypt() and gen_salt() functions used to hash passwords (Lecture 10)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 BEGIN;
 -- Create the tables
 
@@ -228,17 +231,18 @@ COMMIT;
 
 BEGIN;
 -- Test data
--- Every test profile has the password GaveListe2026 (a real BCrypt hash, so log-in can be demoed)
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (1, 'Anna Jensen', 'anna.jensen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1995-12-03', 'https://example.com/pictures/anna.jpg');
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (2, 'Mads Hansen', 'mads.hansen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1987-02-10', NULL);
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (3, 'Sofie Larsen', 'sofie.larsen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '2000-06-21', 'https://example.com/pictures/sofie.jpg');
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (4, 'Frederik Nielsen', 'frederik.nielsen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1992-04-15', NULL);
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (5, 'Ida Pedersen', 'ida.pedersen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1998-11-18', 'https://example.com/pictures/ida.jpg');
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (6, 'Lars Jensen', 'lars.jensen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1964-01-22', NULL);
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (7, 'Mette Jensen', 'mette.jensen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1966-08-30', NULL);
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (8, 'Emil Andersen', 'emil.andersen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '2003-03-07', NULL);
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (9, 'Freja Sørensen', 'freja.sorensen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1997-12-19', 'https://example.com/pictures/freja.jpg');
-INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (10, 'Kasper Rasmussen', 'kasper.rasmussen@example.com', '$2y$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1990-05-25', NULL);
+-- Every test profile has the password GaveListe2026 (a real bcrypt hash, so log-in can be demoed).
+-- The hashes start with $2a$ – the bcrypt version pgcrypto's crypt() understands (Lecture 10).
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (1, 'Anna Jensen', 'anna.jensen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1995-12-03', 'https://example.com/pictures/anna.jpg');
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (2, 'Mads Hansen', 'mads.hansen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1987-02-10', NULL);
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (3, 'Sofie Larsen', 'sofie.larsen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '2000-06-21', 'https://example.com/pictures/sofie.jpg');
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (4, 'Frederik Nielsen', 'frederik.nielsen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1992-04-15', NULL);
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (5, 'Ida Pedersen', 'ida.pedersen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1998-11-18', 'https://example.com/pictures/ida.jpg');
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (6, 'Lars Jensen', 'lars.jensen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1964-01-22', NULL);
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (7, 'Mette Jensen', 'mette.jensen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1966-08-30', NULL);
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (8, 'Emil Andersen', 'emil.andersen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '2003-03-07', NULL);
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (9, 'Freja Sørensen', 'freja.sorensen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1997-12-19', 'https://example.com/pictures/freja.jpg');
+INSERT INTO public.profile (id, fullname, email, passwordhash, dateofbirth, profilepictureurl) VALUES (10, 'Kasper Rasmussen', 'kasper.rasmussen@example.com', '$2a$10$n5ob56t86N4TtS8fgBTj..z5Y.5O.WuokOcZWmkgZdqfoRAkeF0oy', '1990-05-25', NULL);
 
 -- Each pair of people appears only once, whichever of them sent the request
 INSERT INTO public.connection (id, requesterid, addresseeid, status, createdat) VALUES (1, 1, 2, 'accepted', '2026-09-01 18:05:00+02');

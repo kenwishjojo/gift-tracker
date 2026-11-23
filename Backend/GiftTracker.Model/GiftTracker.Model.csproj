@@ -14,8 +14,7 @@
   <ItemGroup>
     <!-- PostgreSQL driver for .NET -->
     <PackageReference Include="Npgsql" Version="8.0.5" />
-    <!-- Hashes passwords the same way as the test data ($2b$10$...) -->
-    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <!-- Passwords are hashed in the database with pgcrypto (Lecture 10), so no hashing package is needed -->
   </ItemGroup>
 
 </Project>
